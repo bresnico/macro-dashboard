@@ -1,9 +1,7 @@
 teacher_ui <- function() {
   tagList(
-    # Message d'erreur pour ID invalide
-    uiOutput("id_error"),
-    
-    # Contenu principal
-    uiOutput("teacher_content")
+    # L'interface de l'enseignant est rendue conditionnellement dans app.R
+    # Nous pouvons simplement préparer un output pour le contenu
+    uiOutput("teacher_results")
   )
 }

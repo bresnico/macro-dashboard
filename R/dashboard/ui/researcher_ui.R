@@ -1,11 +1,9 @@
-# R/ui/researcher_ui.R
+# R/dashboard/ui/researcher_ui.R
 
-researcher_ui <- function() {
+researcher_ui <- function(config) {
   tagList(
-    # Message d'erreur pour code chercheur invalide
-    uiOutput("researcher_error"),
-    
-    # Contenu pour code chercheur valide
+    # L'interface du chercheur est rendue conditionnellement dans app.R
+    # Nous pouvons donc simplement préparer un output pour le contenu
     uiOutput("researcher_content")
   )
 }

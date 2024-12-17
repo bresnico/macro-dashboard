@@ -1,102 +1,107 @@
-# R/server/researcher_server.R
+# R/dashboard/server/researcher_server.R
 
-researcher_server <- function(input, output, session, survey_data) {
-  
-  # Chargement des codes chercheurs depuis credentials.yml
-  credentials <- yaml::read_yaml("config/credentials.yml")
-  valid_researcher_codes <- credentials$researcher_codes
-  
-  # Reactive pour vérifier si le code chercheur est valide
-  is_valid_researcher <- reactive({
+researcher_server <- function(input, output, session, survey_data, config, credentials) {
+  # Valider l'identifiant du chercheur
+  valid_id <- reactive({
     req(input$user_id)
-    input$user_id %in% valid_researcher_codes
+    input$user_id %in% credentials$researcher_codes
   })
   
-  # Message d'erreur si le code chercheur est invalide
-  output$researcher_error <- renderUI({
-    req(input$user_id)
-    
-    if(!is_valid_researcher()) {
-      div(
-        class = "alert alert-danger",
-        "Code chercheur invalide."
-      )
+  # Afficher un message si l'identifiant est invalide
+  observeEvent(input$view_data, {
+    if (input$user_type == "researcher") {
+      if (!valid_id()) {
+        showNotification("Identifiant chercheur invalide.", type = "error")
+      }
     }
   })
   
-  # Contenu principal pour code chercheur valide
+  # Générer le contenu de l'interface du chercheur si l'identifiant est valide
   output$researcher_content <- renderUI({
-    req(is_valid_researcher())
+    req(valid_id())
+    req(survey_data())
     
     tagList(
-      h3("Analyse des données"),
-      
-      # Graphiques ou analyses à venir
-      tabsetPanel(
-        id = "researcherTabs",
-        tabPanel(
-          "Scores par échelle",
-          plotOutput("researcher_scores_plot")
+      sidebarLayout(
+        sidebarPanel(
+          h3("Filtres Démographiques"),
+          # Filtre pour le statut
+          selectInput(
+            inputId = "filter_status",
+            label = "Statut",
+            choices = c("Tous", config$demographics$status$labels),
+            selected = "Tous"
+          ),
+          # Filtre conditionnel pour les années d'expérience
+          uiOutput("conditional_filters"),
+          # Bouton pour appliquer les filtres
+          actionButton("apply_filters", "Appliquer les filtres")
         ),
-        tabPanel(
-          "Évolution des scores",
-          plotOutput("researcher_evolution_plot")
+        mainPanel(
+          h3("Résultats"),
+          DTOutput("researcher_table"),
+          plotOutput("researcher_plot")
         )
-        # Ajouter d'autres analyses si nécessaire
       )
     )
   })
   
-  # Calcul des scores sur l'ensemble des données
-  researcher_scores <- reactive({
-    req(is_valid_researcher())
+  # Générer le filtre conditionnel pour les années d'expérience
+  output$conditional_filters <- renderUI({
+    req(input$filter_status)
+    if (input$filter_status == config$demographics$status$labels$AO02) {
+      selectInput(
+        inputId = "filter_experience",
+        label = "Années d'expérience",
+        choices = c("Tous", config$demographics$experience$labels),
+        selected = "Tous"
+      )
+    }
+  })
+  
+  # Observer le bouton "Appliquer les filtres"
+  observeEvent(input$apply_filters, {
+    req(valid_id())
     req(survey_data())
     
-    scores <- list()
-    for (scale_name in names(config$scales)) {
-      score <- calculate_scale_scores(survey_data(), scale_name, config)
-      if (!is.null(score)) {
-        scores[[scale_name]] <- score
-      }
+    # Récupérer les filtres sélectionnés
+    filters <- list()
+    filters$status <- input$filter_status
+    if (!is.null(input$filter_experience)) {
+      filters$experience <- input$filter_experience
     }
-    scores
-  })
-  
-  # 1. Affichage des scores moyens par échelle
-  output$researcher_scores_plot <- renderPlot({
-    req(researcher_scores())
     
-    # Préparation des données pour le graphique
-    scores_df <- bind_rows(researcher_scores(), .id = "scale") %>%
-      group_by(scale) %>%
-      summarise(mean_score = mean(total_score, na.rm = TRUE))
+    # Préparer les données en appliquant les filtres
+    researcher_data <- prepare_researcher_data(
+      data = survey_data(),
+      config = config,
+      filters = filters
+    )
     
-    # Création du graphique
-    ggplot(scores_df, aes(x = scale, y = mean_score, fill = scale)) +
-      geom_bar(stat = "identity", show.legend = FALSE) +
-      labs(title = "Scores moyens par échelle",
-           x = "Échelle",
-           y = "Score moyen") +
-      theme_minimal()
-  })
-  
-  # 2. Affichage de l'évolution des scores
-  output$researcher_evolution_plot <- renderPlot({
-    req(researcher_scores())
-    
-    # Préparation des données pour le graphique
-    evolution_df <- bind_rows(researcher_scores(), .id = "scale") %>%
-      group_by(scale, timestamp) %>%
-      summarise(mean_score = mean(total_score, na.rm = TRUE))
-    
-    # Création du graphique
-    ggplot(evolution_df, aes(x = timestamp, y = mean_score, color = scale)) +
-      geom_line() +
-      geom_point() +
-      labs(title = "Évolution des scores dans le temps",
-           x = "Date",
-           y = "Score moyen",
-           color = "Échelle") +
-      theme_minimal()
+    if (is.null(researcher_data) || nrow(researcher_data) == 0) {
+      showNotification("Aucune donnée ne correspond aux filtres sélectionnés.", type = "warning")
+      output$researcher_table <- renderDT(NULL)
+      output$researcher_plot <- renderPlot(NULL)
+    } else {
+      # Afficher le tableau avec les sous-scores et scores globaux
+      output$researcher_table <- renderDT({
+        datatable(researcher_data, options = list(pageLength = 10, autoWidth = TRUE))
+      })
+      
+      # Créer un graphique des scores globaux
+      output$researcher_plot <- renderPlot({
+        data_long <- researcher_data %>%
+          pivot_longer(
+            cols = -c(person_id, timestamp),
+            names_to = "scale",
+            values_to = "score"
+          )
+        ggplot(data_long, aes(x = score)) +
+          geom_histogram(binwidth = 0.5, fill = "blue", color = "white") +
+          facet_wrap(~ scale, scales = "free") +
+          theme_minimal() +
+          labs(title = "Distribution des scores par échelle", x = "Score", y = "Fréquence")
+      })
+    }
   })
 }
