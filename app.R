@@ -11,6 +11,9 @@ source("R/dashboard/server/teacher_server.R")
 source("R/dashboard/server/director_server.R")
 source("R/dashboard/server/researcher_server.R")
 
+# Chargement des identifiants chercheurs
+credentials <- yaml::read_yaml("config/credentials.yml")
+
 # L'UI
 ui <- fluidPage(
   theme = bs_theme(
@@ -70,7 +73,7 @@ ui <- fluidPage(
       
       conditionalPanel(
         condition = "input.user_type == 'researcher'",
-        researcher_ui()
+        researcher_ui(config)
       )
     )
   )
@@ -88,7 +91,7 @@ server <- function(input, output, session) {
     
     field_placeholder <- switch(input$user_type,
                                 "teacher" = "01NS14",
-                                "director" = "VSFR01",
+                                "director" = "un",
                                 "researcher" = "RES001")
     
     textInput("user_id", 
@@ -99,7 +102,10 @@ server <- function(input, output, session) {
   # Reactive value pour stocker les données
   survey_data <- reactiveVal(NULL)
   
-  # Chargement des données
+  # Reactive value pour stocker la validité de l'identifiant
+  valid_id <- reactiveVal(FALSE)
+  
+  # Chargement des données et validation de l'identifiant
   observeEvent(input$view_data, {
     # Informer l'utilisateur
     showNotification("Chargement des données...", 
@@ -112,6 +118,7 @@ server <- function(input, output, session) {
         removeNotification("loading")
         showNotification("Erreur de connexion à LimeSurvey", 
                          type = "error")
+        valid_id(FALSE)
         return()
       }
       
@@ -122,6 +129,7 @@ server <- function(input, output, session) {
         removeNotification("loading")
         showNotification("Aucune donnée disponible", 
                          type = "warning")
+        valid_id(FALSE)
         return()
       }
       
@@ -136,32 +144,60 @@ server <- function(input, output, session) {
           timestamp  = submitdate
         )
       
+      # Afficher les noms des colonnes
+      print("Colonnes de processed_data :")
+      print(names(processed_data))
+      
       survey_data(processed_data)
       
+      # Validation de l'identifiant pour enseignants et directeurs
+      user_type <- input$user_type
+      user_id <- input$user_id
+      
+      if (user_type == "teacher") {
+        valid_ids <- unique(processed_data$g01q13)
+      } else if (user_type == "director") {
+        valid_ids <- unique(processed_data$groupecode)
+      } else if (user_type == "researcher") {
+        valid_ids <- credentials$researcher_codes
+      }
+      
+      if (user_id %in% valid_ids) {
+        valid_id(TRUE)
+        showNotification("Données chargées avec succès", 
+                         type = "message")
+      } else {
+        valid_id(FALSE)
+        showNotification("Le code saisi est inconnu.", 
+                         type = "error")
+      }
+      
       removeNotification("loading")
-      showNotification("Données chargées avec succès", 
-                       type = "message")
       
     }, error = function(e) {
       removeNotification("loading")
       showNotification(
-        paste("Erreur lors du chargement:", e$message), 
+        paste("Erreur lors du chargement :", e$message), 
         type = "error"
       )
+      valid_id(FALSE)
     })
   })
   
   # Appel des serveurs spécifiques selon le type d'utilisateur
-  observeEvent(input$user_type, {
+  observeEvent(input$view_data, {
+    req(valid_id())
+    
     if(input$user_type == "teacher") {
-      teacher_server(input, output, session, survey_data)
+      teacher_server(input, output, session, survey_data, config)
     } else if(input$user_type == "director") {
       director_server(input, output, session, survey_data, config)
     } else if(input$user_type == "researcher") {
-      researcher_server(input, output, session, survey_data)
+      researcher_server(input, output, session, survey_data, config, credentials)
     }
   })
 }
+
 
 # Lancement de l'app
 shinyApp(ui = ui, server = server)

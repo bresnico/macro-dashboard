@@ -1,20 +1,20 @@
 director_server <- function(input, output, session, survey_data, config) {
-  # Validation du code groupe avec prise en compte du groupe "divers"
-  is_valid_group <- reactive({
-    req(input$user_id)
-    req(survey_data())
-    
-    # Considérer soit le groupe spécifique, soit "divers"
-    input$user_id == "divers" || input$user_id %in% survey_data()$groupecode
-  })
-  
-  # Préparation des données avec gestion spéciale pour "divers"
+  # Préparer les données pour le directeur (par groupecode)
   director_data <- reactive({
-    req(is_valid_group())
+    req(survey_data())
+    # Filtrer les données en fonction de l'ID du directeur (groupecode)
+    data_filtered <- survey_data() %>%
+      filter(groupecode == input$user_id)
     
-    # Appel à la fonction modifiée dans functions.R
+    # Afficher une notification si aucune donnée n'est disponible
+    if (nrow(data_filtered) == 0) {
+      showNotification("Aucune donnée disponible pour cet identifiant.", type = "warning")
+      return(NULL)
+    }
+    
+    # Appeler la fonction pour préparer les données du directeur
     prepare_director_data(
-      data = survey_data(),
+      data = data_filtered,
       code_groupe = input$user_id,
       config = config
     )
@@ -22,10 +22,12 @@ director_server <- function(input, output, session, survey_data, config) {
   
   # Générer le checkboxGroupInput via renderUI
   output$scaleCheckboxes <- renderUI({
+    req(director_data())
     checkboxGroupInput(
       "selected_scales",
       "Échelles à visualiser :",
-      choices = names(config$scales)  # Accès direct aux échelles
+      choices = names(config$scales),  # Accès direct aux échelles
+      selected = names(config$scales)[1]
     )
   })
   
@@ -36,9 +38,12 @@ director_server <- function(input, output, session, survey_data, config) {
     plot_data <- director_data()$stats %>%
       filter(scale %in% input$selected_scales)
     
-    if (nrow(plot_data) == 0) return(NULL)
+    if (nrow(plot_data) == 0) {
+      showNotification("Aucune donnée à afficher pour les échelles sélectionnées.", type = "warning")
+      return(NULL)
+    }
     
-    ggplot(plot_data, aes(x = period, y = mean_group, color = group_type)) +
+    ggplot(plot_data, aes(x = period, y = mean_group, color = scale)) +
       geom_line() +
       geom_point(aes(size = n_group)) +
       scale_size_continuous(name = "Nombre de réponses") +
@@ -46,7 +51,7 @@ director_server <- function(input, output, session, survey_data, config) {
         title = paste("Évolution des scores pour le groupe", input$user_id),
         x = "Période",
         y = "Score moyen",
-        color = "Type de groupe"
+        color = "Échelle"
       ) +
       theme_minimal() +
       theme(
@@ -62,13 +67,16 @@ director_server <- function(input, output, session, survey_data, config) {
     table_data <- director_data()$stats %>%
       filter(scale %in% input$selected_scales)
     
-    if (nrow(table_data) == 0) return(NULL)
+    if (nrow(table_data) == 0) {
+      showNotification("Aucune donnée disponible pour le tableau.", type = "warning")
+      return(NULL)
+    }
     
     table_data %>%
       select(
         "Période" = period,
-        "Type de groupe" = group_type,
         "Échelle" = scale,
+        "Type de groupe" = group_type,
         "N observations" = n_group,
         "Score moyen" = mean_group
       ) %>%
@@ -77,5 +85,17 @@ director_server <- function(input, output, session, survey_data, config) {
         Période = format(Période, "%B %Y"),
         `Score moyen` = round(`Score moyen`, 2)
       )
+  })
+  
+  # Contenu principal pour le directeur
+  output$director_results <- renderUI({
+    req(director_data())
+    tagList(
+      uiOutput("scaleCheckboxes"),
+      h3("Graphique d'évolution des scores"),
+      plotOutput("evolution_plot"),
+      h3("Tableau récapitulatif"),
+      tableOutput("stats_table")
+    )
   })
 }

@@ -1,15 +1,7 @@
-director_ui <- function(id, config) {
+director_ui <- function() {
   tagList(
-    uiOutput("group_error"),
-    uiOutput("director_content"),
-    fluidRow(
-      column(3,
-             uiOutput("scaleCheckboxes")  # Utiliser uiOutput au lieu de checkboxGroupInput
-      ),
-      column(9,
-             plotOutput("evolution_plot"),
-             tableOutput("stats_table")
-      )
-    )
+    # L'interface du directeur est rendue conditionnellement dans app.R
+    # Nous pouvons simplement préparer un output pour le contenu
+    uiOutput("director_results")
   )
 }

@@ -1,12 +1,6 @@
-teacher_server <- function(input, output, session, survey_data) {
-  is_valid_id <- reactive({
-    req(input$user_id)
-    req(survey_data())
-    input$user_id %in% survey_data()$g01q13
-  })
+teacher_server <- function(input, output, session, survey_data, config) {
   
   prepared_data <- reactive({
-    req(is_valid_id())
     prepare_teacher_data(
       data = survey_data(), 
       id_personnel = input$user_id, 
@@ -111,8 +105,7 @@ teacher_server <- function(input, output, session, survey_data) {
     }
   })
   
-  output$teacher_content <- renderUI({
-    req(is_valid_id())
+  output$teacher_results <- renderUI({
     tagList(
       uiOutput("scale_selector"),
       tabsetPanel(

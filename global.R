@@ -6,6 +6,7 @@ library(tidyverse)
 library(lubridate)
 library(yaml)
 library(limer)
+library(DT)
 
 # 2. Chargement de la configuration
 config <- yaml::read_yaml("config/scales_definition.yml")

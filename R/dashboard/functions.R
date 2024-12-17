@@ -130,22 +130,33 @@ prepare_director_data <- function(data, code_groupe, config) {
 
 # Chercheur
 
+# R/functions.R
+
 prepare_researcher_data <- function(data, config, filters = list()) {
-  # Application des filtres démographiques si fournis
+  data_filtered <- data
   if (length(filters) > 0) {
     for (filter_name in names(filters)) {
       filter_value <- filters[[filter_name]]
-      data <- data %>%
-        filter(!!sym(filter_name) == filter_value)
+      if (filter_value != "Tous") {
+        data_filtered <- data_filtered %>%
+          filter(.data[[filter_name]] == filter_value)
+      }
     }
   }
   
-  # Calcul des scores pour toutes les échelles
-  researcher_scores <- list()
-  for (scale_name in names(config$scales)) {
-    scores <- calculate_scale_scores(data, scale_name, config)
-    researcher_scores[[scale_name]] <- scores
+  if (nrow(data_filtered) == 0) {
+    return(NULL)
   }
   
-  return(researcher_scores)
+  # Exemple de calcul de score pour l'échelle "via"
+  via_items <- grep("^G02Q03_SQ", names(data_filtered), value = TRUE)
+  
+  scores_df <- data_filtered %>%
+    mutate(
+      via_score = rowMeans(select(., all_of(via_items)), na.rm = TRUE)
+      # Ajouter les calculs pour les autres échelles si nécessaire
+    ) %>%
+    select(g01q13, timestamp, via_score)
+  
+  return(scores_df)
 }
