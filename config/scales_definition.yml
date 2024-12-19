@@ -50,332 +50,260 @@ demographics:
       AO03: "10+"
 
 scale_types:
+  likert_4:
+    min_value: 1
+    max_value: 4
   likert_5:
     min_value: 1
     max_value: 5
+  likert_6:
+    min_value: 1
+    max_value: 6
   likert_7:
     min_value: 1
     max_value: 7
+  likert_9:
+    min_value: 1
+    max_value: 9
 
 scales:
-  via:
-    id: "g02"
-    type: "likert_5"
+  tses:
+    id: "g06"
+    type: "likert_9"
     response_prefix: "AO0"
     items:
-      - id: "g02q03sq001"
-        reversed: false  # Appréciation de la Beauté et de l'Excellence
-      - id: "g02q03sq002"
-        reversed: false  # Courage
-      - id: "g02q03sq003"
-        reversed: false  # Créativité
-      - id: "g02q03sq004"
-        reversed: true   # Curiosité
-      - id: "g02q03sq005"
-        reversed: false  # Travail d'équipe
-      - id: "g02q03sq006"
-        reversed: true   # Équité et sens de la justice
-      - id: "g02q03sq007"
-        reversed: false  # Sens du pardon
-      - id: "g02q03sq008"
-        reversed: false  # Gratitude
-      - id: "g02q03sq009"
-        reversed: true   # Honnêteté
-      - id: "g02q03sq010"
-        reversed: false  # Espoir
-      - id: "g02q03sq011"
-        reversed: true   # Humilité
-      - id: "g02q03sq012"
-        reversed: false  # Humour
-      - id: "g02q03sq013"
-        reversed: false  # Discernement
-      - id: "g02q03sq014"
-        reversed: false  # Gentillesse et générosité
-      - id: "g02q03sq015"
-        reversed: false  # Capacité à diriger
-      - id: "g02q03sq016"
-        reversed: false  # Amour de l'apprentissage
-      - id: "g02q03sq017"
-        reversed: false  # Amour
-      - id: "g02q03sq018"
-        reversed: false  # Persévérance
-      - id: "g02q03sq019"
-        reversed: false  # Perspective
-      - id: "g02q03sq020"
-        reversed: false  # Prudence
-      - id: "g02q03sq021"
-        reversed: true   # Maîtrise de soi
-      - id: "g02q03sq022"
-        reversed: false  # Intelligence sociale
-      - id: "g02q03sq023"
-        reversed: false  # Spiritualité
-      - id: "g02q03sq024"
-        reversed: false  # Travail d'équipe
-      - id: "g02q03sq025"
-        reversed: true   # Joie de vivre
-      - id: "g02q03sq026"
-        reversed: false  # Appréciation de la Beauté et de l'Excellence
-      - id: "g02q03sq027"
-        reversed: false  # Courage
-      - id: "g02q03sq028"
-        reversed: false  # Créativité
-      - id: "g02q03sq029"
-        reversed: false  # Curiosité
-      - id: "g02q03sq030"
-        reversed: true   # Équité et sens de la justice
-      - id: "g02q03sq031"
-        reversed: false  # Sens du pardon
-      - id: "g02q03sq032"
-        reversed: false  # Gratitude
-      - id: "g02q03sq033"
-        reversed: false  # Honnêteté
-      - id: "g02q03sq034"
-        reversed: false  # Espoir
-      - id: "g02q03sq035"
-        reversed: true   # Humilité
-      - id: "g02q03sq036"
-        reversed: false  # Humour
-      - id: "g02q03sq037"
-        reversed: false  # Discernement
-      - id: "g02q03sq038"
-        reversed: false  # Gentillesse et générosité
-      - id: "g02q03sq039"
-        reversed: false  # Capacité à diriger
-      - id: "g02q03sq040"
-        reversed: false  # Amour de l'apprentissage
-      - id: "g02q03sq041"
-        reversed: false  # Amour
-      - id: "g02q03sq042"
-        reversed: true   # Persévérance
-      - id: "g02q03sq043"
-        reversed: false  # Perspective
-      - id: "g02q03sq044"
-        reversed: false  # Prudence
-      - id: "g02q03sq045"
-        reversed: false  # Maîtrise de soi
-      - id: "g02q03sq046"
-        reversed: false  # Intelligence sociale
-      - id: "g02q03sq047"
-        reversed: false  # Spiritualité
-      - id: "g02q03sq048"
-        reversed: true   # Travail d'équipe
-      - id: "g02q03sq049"
-        reversed: true   # Joie de vivre
-      - id: "g02q03sq050"
-        reversed: false  # Appréciation de la Beauté et de l'Excellence
-      - id: "g02q03sq051"
-        reversed: true   # Courage
-      - id: "g02q03sq052"
-        reversed: false  # Travail d'équipe
-      - id: "g02q03sq053"
-        reversed: false  # Créativité
-      - id: "g02q03sq054"
-        reversed: false  # Curiosité
-      - id: "g02q03sq055"
-        reversed: true   # Équité et sens de la justice
-      - id: "g02q03sq056"
-        reversed: false  # Sens du pardon
-      - id: "g02q03sq057"
-        reversed: true   # Gratitude
-      - id: "g02q03sq058"
-        reversed: true   # Honnêteté
-      - id: "g02q03sq059"
-        reversed: false  # Espoir
-      - id: "g02q03sq060"
-        reversed: true   # Humilité
-      - id: "g02q03sq061"
-        reversed: false  # Humour
-      - id: "g02q03sq062"
-        reversed: false  # Discernement
-      - id: "g02q03sq063"
-        reversed: true   # Gentillesse et générosité
-      - id: "g02q03sq064"
-        reversed: false  # Capacité à diriger
-      - id: "g02q03sq065"
-        reversed: false  # Amour de l'apprentissage
-      - id: "g02q03sq066"
-        reversed: false  # Amour
-      - id: "g02q03sq067"
-        reversed: false  # Persévérance
-      - id: "g02q03sq068"
-        reversed: false  # Perspective
-      - id: "g02q03sq069"
-        reversed: false  # Prudence
-      - id: "g02q03sq070"
-        reversed: false  # Maîtrise de soi
-      - id: "g02q03sq071"
-        reversed: true   # Intelligence sociale
-      - id: "g02q03sq072"
-        reversed: false  # Spiritualité
-      - id: "g02q03sq073"
-        reversed: false  # Travail d'équipe
-      - id: "g02q03sq074"
-        reversed: true   # Joie de vivre
-      - id: "g02q03sq075"
-        reversed: false  # Appréciation de la Beauté et de l'Excellence
-      - id: "g02q03sq076"
-        reversed: false  # Courage
-      - id: "g02q03sq077"
-        reversed: false  # Créativité
-      - id: "g02q03sq078"
-        reversed: false  # Curiosité
-      - id: "g02q03sq079"
-        reversed: true   # Équité et sens de la justice
-      - id: "g02q03sq080"
-        reversed: false  # Sens du pardon
-      - id: "g02q03sq081"
-        reversed: false   # Gratitude
-      - id: "g02q03sq082"
-        reversed: false   # Honnêteté
-      - id: "g02q03sq083"
-        reversed: false  # Espoir
-      - id: "g02q03sq084"
-        reversed: true   # Humilité
-      - id: "g02q03sq085"
-        reversed: false  # Humour
-      - id: "g02q03sq086"
-        reversed: false  # Discernement
-      - id: "g02q03sq087"
-        reversed: false  # Gentillesse et générosité
-      - id: "g02q03sq088"
-        reversed: false  # Capacité à diriger
-      - id: "g02q03sq089"
-        reversed: false  # Amour de l'apprentissage
-      - id: "g02q03sq090"
-        reversed: false  # Amour
-      - id: "g02q03sq091"
-        reversed: true   # Persévérance
-      - id: "g02q03sq092"
-        reversed: false  # Perspective
-      - id: "g02q03sq093"
-        reversed: true   # Prudence
-      - id: "g02q03sq094"
-        reversed: true   # Maîtrise de soi
-      - id: "g02q03sq095"
-        reversed: true   # Intelligence sociale
-      - id: "g02q03sq096"
-        reversed: false  # Spiritualité
-      - id: "g02q03sq097"
-        reversed: false  # Travail d'équipe
-      - id: "g02q03sq098"
-        reversed: false  # Joie de vivre
-      - id: "g02q03sq099"
-        reversed: false  # Sens
-      - id: "g02q03sq100"
-        reversed: false  # Sens
+      - id: "g06q18sq001"
+        reversed: false
+      - id: "g06q18sq002"
+        reversed: false
+      - id: "g06q18sq003"
+        reversed: false
+      - id: "g06q18sq004"
+        reversed: false
+      - id: "g06q18sq005"
+        reversed: false
+      - id: "g06q18sq006"
+        reversed: false
+      - id: "g06q18sq007"
+        reversed: false
+      - id: "g06q18sq008"
+        reversed: false
+      - id: "g06q18sq009"
+        reversed: false
+      - id: "g06q18sq010"
+        reversed: false
+      - id: "g06q18sq011"
+        reversed: false
+      - id: "g06q18sq012"
+        reversed: false
     scoring:
       total: true
       subscales:
-        amour:
-          items: ["g02q03sq017", "g02q03sq041", "g02q03sq066", "g02q03sq090"]
-        apprentissage:
-          items: ["g02q03sq016", "g02q03sq040", "g02q03sq065", "g02q03sq089"]
-        beaute:
-          items: ["g02q03sq001", "g02q03sq026", "g02q03sq050", "g02q03sq075"]
-        capacite_a_diriger:
-          items: ["g02q03sq015", "g02q03sq039", "g02q03sq064", "g02q03sq088"]
-        courage:
-          items: ["g02q03sq002", "g02q03sq027", "g02q03sq051", "g02q03sq076"]
-        creativite:
-          items: ["g02q03sq003", "g02q03sq028", "g02q03sq053", "g02q03sq077"]
-        curiosite:
-          items: ["g02q03sq004", "g02q03sq029", "g02q03sq054", "g02q03sq078"]
-        discernement:
-          items: ["g02q03sq013", "g02q03sq037", "g02q03sq062", "g02q03sq086"]
-        equite:
-          items: ["g02q03sq006", "g02q03sq030", "g02q03sq055", "g02q03sq079"]
-        espoir:
-          items: ["g02q03sq010", "g02q03sq034", "g02q03sq059", "g02q03sq083"]
-        gentillesse:
-          items: ["g02q03sq014", "g02q03sq038", "g02q03sq063", "g02q03sq087"]
-        gratitude:
-          items: ["g02q03sq008", "g02q03sq032", "g02q03sq057", "g02q03sq081"]
-        honnetete:
-          items: ["g02q03sq009", "g02q03sq033", "g02q03sq058", "g02q03sq082"]
-        humilite:
-          items: ["g02q03sq011", "g02q03sq035", "g02q03sq060", "g02q03sq084"]
-        humour:
-          items: ["g02q03sq012", "g02q03sq036", "g02q03sq061", "g02q03sq085"]
-        intelligence_sociale:
-          items: ["g02q03sq022", "g02q03sq046", "g02q03sq071", "g02q03sq095"]
-        joie_de_vivre:
-          items: ["g02q03sq025", "g02q03sq049", "g02q03sq074", "g02q03sq098"]
-        maitrise_de_soi:
-          items: ["g02q03sq021", "g02q03sq045", "g02q03sq070", "g02q03sq094"]
-        perseverance:
-          items: ["g02q03sq018", "g02q03sq042", "g02q03sq067", "g02q03sq091"]
-        perspective:
-          items: ["g02q03sq019", "g02q03sq043", "g02q03sq068", "g02q03sq092"]
-        prudence:
-          items: ["g02q03sq020", "g02q03sq044", "g02q03sq069", "g02q03sq093"]
-        sens:
-          items: ["g02q03sq099", "g02q03sq100"]
-        pardon:
-          items: ["g02q03sq007", "g02q03sq031", "g02q03sq056", "g02q03sq080"]
-        spiritualite:
-          items: ["g02q03sq023", "g02q03sq047", "g02q03sq072", "g02q03sq096"]
-        travail_d_equipe:
-          items: ["g02q03sq005", "g02q03sq024", "g02q03sq048", "g02q03sq052", "g02q03sq073", "g02q03sq097"]
-  prout:
-    id: "g05"
-    type: "likert_5"
+        student_engagement:
+          items: ["g06q18sq002", "g06q18sq003", "g06q18sq004", "g06q18sq011"]
+        instructional_strategies:
+          items: ["g06q18sq005", "g06q18sq009", "g06q18sq010", "g06q18sq012"]
+        classroom_management:
+          items: ["g06q18sq001", "g06q18sq006", "g06q18sq007", "g06q18sq008"]
+  tes:
+    id: "g07"
+    type: "likert_4"
     response_prefix: "AO0"
     items:
-      - id: "g05q17sq002"
+      - id: "g07q19sq001"
         reversed: false
-      - id: "g05q17sq003"
+      - id: "g07q19sq002"
         reversed: false
-      - id: "g05q17sq004"
-        reversed: true
+      - id: "g07q19sq003"
+        reversed: false
+      - id: "g07q19sq004"
+        reversed: false
+      - id: "g07q19sq005"
+        reversed: false
+      - id: "g07q19sq006"
+        reversed: false
+      - id: "g07q19sq007"
+        reversed: false
+      - id: "g07q19sq008"
+        reversed: false
+      - id: "g07q19sq009"
+        reversed: false
+      - id: "g07q19sq010"
+        reversed: false
+      - id: "g07q19sq011"
+        reversed: false
+      - id: "g07q19sq012"
+        reversed: false
     scoring:
-      total: true
-  sus:
-    id: "g03"
+      total: false
+      subscales:
+        joie:
+          items: ["g07q19sq001", "g07q19sq002", "g07q19sq003", "g07q19sq004"]
+        colere:
+          items: ["g07q19sq005", "g07q19sq006", "g07q19sq007", "g07q19sq008"]
+        anxiete:
+          items: ["g07q19sq009", "g07q19sq010", "g07q19sq011", "g07q19sq012"]
+  smbm:
+    id: "g08"
     type: "likert_7"
     response_prefix: "AO0"
     items:
-      - id: "g03q04sq001"
+      - id: "g08q20sq001"
         reversed: false
-      - id: "g03q04sq002"
-        reversed: true
-      - id: "g03q04sq003"
+      - id: "g08q20sq002"
         reversed: false
-      - id: "g03q04sq004"
+      - id: "g08q20sq003"
         reversed: false
-      - id: "g03q04sq005"
+      - id: "g08q20sq004"
         reversed: false
-      - id: "g03q04sq006"
+      - id: "g08q20sq005"
         reversed: false
-      - id: "g03q04sq007"
+      - id: "g08q20sq006"
         reversed: false
-      - id: "g03q04sq008"
+      - id: "g08q20sq007"
         reversed: false
-      - id: "g03q04sq009"
+      - id: "g08q20sq008"
         reversed: false
-      - id: "g03q04sq010"
+      - id: "g08q20sq009"
         reversed: false
-      - id: "g03q04sq011"
+      - id: "g08q20sq010"
         reversed: false
-      - id: "g03q04sq012"
+      - id: "g08q20sq011"
+        reversed: false
+      - id: "g08q20sq012"
+        reversed: false
+      - id: "g08q20sq013"
+        reversed: false
+      - id: "g08q20sq014"
         reversed: false
     scoring:
       total: true
       subscales:
-        connaissance:
-          items: ["g03q04sq001", "g03q04sq002", "g03q04sq003", "g03q04sq004", "g03q04sq005", "g03q04sq006"]
-        utilisation:
-          items: ["g03q04sq007", "g03q04sq008", "g03q04sq009", "g03q04sq010", "g03q04sq011", "g03q04sq012"]
+        fatigue_physique:
+          items: ["g08q20sq001", "g08q20sq002", "g08q20sq003", "g08q20sq004","g08q20sq005","g08q20sq006"]
+        lassitude_cognitive:
+          items: ["g08q20sq007", "g08q20sq008", "g08q20sq009", "g08q20sq010","g08q20sq011"]
+        epuisement_emotionnel:
+          items: ["g08q20sq012", "g08q20sq013", "g08q20sq014"]
+  cps:
+    id: "g09"
+    type: "likert_7"
+    response_prefix: "AO0"
+    items:
+      - id: "g09q21sq001"
+        reversed: false
+      - id: "g09q21sq002"
+        reversed: false
+      - id: "g09q21sq003"
+        reversed: false
+      - id: "g09q21sq004"
+        reversed: false
+      - id: "g09q21sq005"
+        reversed: false
+      - id: "g09q21sq006"
+        reversed: false
+      - id: "g09q21sq007"
+        reversed: false
+      - id: "g09q21sq008"
+        reversed: false
+      - id: "g09q21sq009"
+        reversed: false
+      - id: "g09q21sq010"
+        reversed: false
+      - id: "g09q21sq011"
+        reversed: false
+      - id: "g09q21sq012"
+        reversed: false
+      - id: "g09q21sq013"
+        reversed: false
+      - id: "g09q21sq014"
+        reversed: false
+      - id: "g09q21sq015"
+        reversed: false
+    scoring:
+      total: true
+      subscales:
+        competences_sociales:
+          items: ["g09q21sq001", "g09q21sq002", "g09q21sq003", "g09q21sq004"]
+        assertivite:
+          items: ["g09q21sq005", "g09q21sq006"]
+        competences_cognitives:
+          items: ["g09q21sq007", "g09q21sq008", "g09q21sq009","g09q21sq010"]
+        competences_emotionnelles:
+          items: ["g09q21sq011", "g09q21sq012", "g09q21sq013", "g09q21sq014","g09q21sq015"]
+  twbi:
+    id: "g10"
+    type: "likert_6"
+    response_prefix: "AO0"
+    items:
+      - id: "g10q22sq001"
+        reversed: false
+      - id: "g10q22sq002"
+        reversed: false
+      - id: "g10q22sq003"
+        reversed: false
+      - id: "g10q22sq004"
+        reversed: false
+      - id: "g10q22sq005"
+        reversed: false
+      - id: "g10q22sq006"
+        reversed: false
+      - id: "g10q22sq007"
+        reversed: false
+      - id: "g10q22sq008"
+        reversed: false
+      - id: "g10q22sq009"
+        reversed: false
+      - id: "g10q22sq010"
+        reversed: false
+      - id: "g10q22sq011"
+        reversed: false
+      - id: "g10q22sq012"
+        reversed: false
+      - id: "g10q22sq013"
+        reversed: false
+      - id: "g10q22sq014"
+        reversed: false
+      - id: "g10q22sq015"
+        reversed: false
+      - id: "g10q22sq016"
+        reversed: false
+      - id: "g10q22sq017"
+        reversed: false
+      - id: "g10q22sq018"
+        reversed: false
+      - id: "g10q22sq019"
+        reversed: false
+      - id: "g10q22sq020"
+        reversed: false
+    scoring:
+      total: true
+      subscales:
+        physical_wellbeing:
+          items: ["g10q22sq001", "g10q22sq002", "g10q22sq003", "g10q22sq004"]
+        emotional_psychological_wellbeing:
+          items: ["g10q22sq005", "g10q22sq006", "g10q22sq007", "g10q22sq008"]
+        cognitive_wellbeing:
+          items: ["g10q22sq009", "g10q22sq010", "g10q22sq011", "g10q22sq012"]
+        social_wellbeing:
+          items: ["g10q22sq013", "g10q22sq014", "g10q22sq015", "g10q22sq016"]
+        spiritual_wellbeing:
+          items: ["g10q22sq017", "g10q22sq018", "g10q22sq019", "g10q22sq020"]
 
 validation:
   required_fields:
     - "personal_id"
     - "submitdate"
   min_responses:
-    via: 0.9  # 90% des items doivent être complétés
-    sus: 1.0  # Tous les items doivent être complétés
-    prout: 1.0  # Tous les items doivent être complétés
+    tses: 1.0  # Tous les items doivent être complétés
+    tes: 1.0
+    smbm: 1.0
+    cps: 1.0
+    twbi: 1.0
   value_ranges:
-    via: [1, 5]
-    sus: [1, 7]
-    prout: [1, 5]
+    tses: [1, 9]
+    tes: [1, 4]
+    smbm: [1, 7]
+    cps: [1, 7]
+    twbi: [1, 6]
     
