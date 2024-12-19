@@ -249,8 +249,11 @@ calculate_scale_scores <- function(data, scale_name, config) {
       all_of(valid_items)
     )
   
-  # Calcul du score total si spécifié
-  if (!is.null(scale_config$scoring$total) && scale_config$scoring$total == TRUE) {
+  # Explicit scoring logic based on configuration
+  scoring_config <- scale_config$scoring
+  
+  # Calculate total score only if explicitly specified as TRUE
+  if (isTRUE(scoring_config$total)) {
     scores <- scores %>%
       rowwise() %>%
       mutate(
@@ -259,24 +262,55 @@ calculate_scale_scores <- function(data, scale_name, config) {
       ungroup()
   }
   
-  # Calcul des sous-échelles valides
-  if (!is.null(scale_config$scoring$subscales)) {
-    for (subscale_name in names(scale_config$scoring$subscales)) {
-      subscale_items <- intersect(
-        scale_config$scoring$subscales[[subscale_name]]$items,
-        valid_items
-      )
+  # Calculate subscales if they are defined
+  if (!is.null(scoring_config$subscales)) {
+    for (subscale_name in names(scoring_config$subscales)) {
+      # Get the items for this subscale
+      subscale_items <- scoring_config$subscales[[subscale_name]]$items
       
-      if (length(subscale_items) > 0) {
+      # Verify which items are actually available in our valid items
+      available_subscale_items <- intersect(subscale_items, valid_items)
+      
+      # Only calculate if we have enough items
+      if (length(available_subscale_items) > 0) {
+        # Calculate the subscale score
         scores <- scores %>%
           rowwise() %>%
           mutate(
-            !!subscale_name := mean(c_across(all_of(subscale_items)), na.rm = TRUE)
+            !!subscale_name := mean(c_across(all_of(available_subscale_items)), na.rm = TRUE)
           ) %>%
           ungroup()
       }
     }
   }
   
+  # Verify we have at least one score calculated
+  if (ncol(scores) <= 3) {  # Only timestamp, group_id, and person_id columns
+    return(NULL)
+  }
+  
+  # Nettoyage final du dataframe scores
+  keep_columns <- c("timestamp", "group_id", "person_id")
+  
+  # Ajouter le score total s'il a été calculé
+  if (isTRUE(scoring_config$total)) {
+    keep_columns <- c(keep_columns, "total_score")
+  }
+  
+  # Ajouter les noms des sous-échelles si elles ont été calculées
+  if (!is.null(scoring_config$subscales)) {
+    keep_columns <- c(keep_columns, names(scoring_config$subscales))
+  }
+  
+  # Ne conserver que les colonnes nécessaires
+  scores <- scores %>%
+    select(all_of(keep_columns))
+  
+  # Vérifier qu'il reste au moins un score calculé
+  if (ncol(scores) <= 3) {  # Seulement timestamp, group_id, et person_id
+    return(NULL)
+  }
+  
   return(scores)
+  
 }

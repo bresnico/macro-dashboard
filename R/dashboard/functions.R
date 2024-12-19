@@ -1,61 +1,88 @@
 # Enseignant
 
 prepare_teacher_data <- function(data, id_personnel, config) {
+  # Validation de l'ID personnel et récupération des données individuelles
   if (!id_personnel %in% data$g01q13) {
     stop("ID personnel non trouvé")
   }
   
   individual_data <- data %>%
-    filter(g01q13 == id_personnel) %>%
-    arrange(timestamp)
+    filter(g01q13 == id_personnel)
   
+  # Gestion du code groupe avec valeur par défaut "divers"
   code_groupe <- individual_data$groupecode[1]
   if (is.na(code_groupe) || code_groupe == "") {
     code_groupe <- "divers"
   }
   
-  individual_scores <- list()
-  for (scale_name in names(config$scales)) {
-    # Nouvelle section : vérification de la validité des données
-    scale_items <- sapply(config$scales[[scale_name]]$items, function(x) x$id)
-    scale_data <- individual_data[scale_items]
+  # Préparation des statistiques pour chaque échelle
+  scale_stats <- map_dfr(names(config$scales), function(scale_name) {
+    # Calcul des scores individuels
+    individual_scores <- calculate_scale_scores(individual_data, scale_name, config)
     
-    # On calcule le taux de réponses valides
-    response_rate <- sum(!is.na(scale_data)) / length(scale_items)
-    if (response_rate >= config$validation$min_responses[[scale_name]]) {
-      scores <- calculate_scale_scores(individual_data, scale_name, config)
-      if (!is.null(scores) && any(!is.na(scores$total_score))) {
-        individual_scores[[scale_name]] <- scores
-      }
+    if (is.null(individual_scores) || nrow(individual_scores) == 0) {
+      return(NULL)
     }
-  }
+    
+    # Identification des colonnes de scores
+    score_columns <- setdiff(names(individual_scores), 
+                             c("timestamp", "group_id", "person_id"))
+    
+    if (length(score_columns) == 0) {
+      return(NULL)
+    }
+    
+    # Transformation en format long pour les scores individuels
+    scores_long <- individual_scores %>%
+      pivot_longer(
+        cols = all_of(score_columns),
+        names_to = "score_type",
+        values_to = "score_value"
+      ) %>%
+      mutate(
+        period = floor_date(timestamp, "month"),
+        scale = scale_name,
+        measurement_type = "Score personnel"
+      )
+    
+    # Calcul des moyennes de groupe
+    group_data <- data %>%
+      filter(groupecode == code_groupe)
+    group_scores <- calculate_scale_scores(group_data, scale_name, config)
+    
+    if (!is.null(group_scores)) {
+      group_scores_long <- group_scores %>%
+        pivot_longer(
+          cols = all_of(score_columns),
+          names_to = "score_type",
+          values_to = "score_value"
+        ) %>%
+        mutate(
+          period = floor_date(timestamp, "month"),
+          scale = scale_name,
+          measurement_type = "Moyenne du groupe"
+        )
+      
+      # Combiner les scores individuels et de groupe
+      scores_long <- bind_rows(scores_long, group_scores_long)
+    }
+    
+    return(scores_long)
+  })
   
-  group_data <- data %>%
-    filter(groupecode == code_groupe)
-  
-  group_means <- list()
-  for (scale_name in names(individual_scores)) {  # Modification ici pour n'utiliser que les échelles valides
-    scores <- calculate_scale_scores(group_data, scale_name, config)
-    group_mean <- scores %>%
-      summarise(across(where(is.numeric), ~ mean(., na.rm = TRUE)))
-    group_means[[scale_name]] <- group_mean
-  }
-  
-  individual_evolution <- list()
-  for (scale_name in names(individual_scores)) {  # Modification ici aussi
-    scores <- individual_scores[[scale_name]]
-    individual_evolution[[scale_name]] <- scores %>%
-      arrange(timestamp)
-  }
-  
-  result <- list(
-    individual_scores = individual_scores,
-    group_means = group_means,
-    individual_evolution = individual_evolution,
-    code_groupe = code_groupe
+  # Structure des résultats avec métadonnées enrichies
+  results <- list(
+    code_groupe = code_groupe,
+    stats = scale_stats,
+    metadata = list(
+      available_scales = unique(scale_stats$scale),
+      available_score_types = unique(scale_stats$score_type),
+      date_range = range(scale_stats$period),
+      total_measurements = nrow(scale_stats[scale_stats$measurement_type == "Score personnel", ])
+    )
   )
   
-  return(result)
+  return(results)
 }
 
 # Directeur
@@ -80,31 +107,42 @@ prepare_director_data <- function(data, code_groupe, config) {
       return(NULL)
     }
     
-    # Ajout de l'information de groupe
-    scores <- scores %>%
-      mutate(group_id = data$groupecode)
+    # Identification des colonnes de scores (tout sauf timestamp, group_id, person_id)
+    score_columns <- setdiff(names(scores), c("timestamp", "group_id", "person_id"))
     
-    # Transformation des timestamps en période mensuelle
-    scores <- scores %>%
-      mutate(period = floor_date(timestamp, "month"))
+    if (length(score_columns) == 0) {
+      return(NULL)
+    }
+    
+    # Transformation en format long pour traiter tous les types de scores
+    scores_long <- scores %>%
+      pivot_longer(
+        cols = all_of(score_columns),
+        names_to = "score_type",
+        values_to = "score_value"
+      ) %>%
+      mutate(
+        period = floor_date(timestamp, "month"),
+        scale = scale_name
+      )
     
     # Statistiques pour le groupe sélectionné
-    group_stats <- scores %>%
+    group_stats <- scores_long %>%
       filter(group_id == code_groupe) %>%
-      group_by(period, scale = scale_name) %>%
+      group_by(period, scale, score_type) %>%
       summarise(
         n_group = n(),
-        mean_group = mean(total_score, na.rm = TRUE),
+        mean_group = mean(score_value, na.rm = TRUE),
         .groups = "drop"
       ) %>%
       mutate(group_type = "Groupe sélectionné")
     
     # Statistiques pour tous les groupes
-    overall_stats <- scores %>%
-      group_by(period, scale = scale_name) %>%
+    overall_stats <- scores_long %>%
+      group_by(period, scale, score_type) %>%
       summarise(
         n_group = n(),
-        mean_group = mean(total_score, na.rm = TRUE),
+        mean_group = mean(score_value, na.rm = TRUE),
         .groups = "drop"
       ) %>%
       mutate(group_type = "Tous les groupes")
@@ -114,12 +152,13 @@ prepare_director_data <- function(data, code_groupe, config) {
     return(combined_stats)
   })
   
-  # Structure des résultats
+  # Structure des résultats avec métadonnées enrichies
   results <- list(
     code_groupe = code_groupe,
     stats = scale_stats,
     metadata = list(
       available_scales = unique(scale_stats$scale),
+      available_score_types = unique(scale_stats$score_type),
       date_range = range(scale_stats$period),
       total_observations = nrow(data)
     )

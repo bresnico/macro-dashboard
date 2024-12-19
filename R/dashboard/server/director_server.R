@@ -1,18 +1,15 @@
 director_server <- function(input, output, session, survey_data, config) {
-  # Préparer les données pour le directeur (par groupecode)
+  # Données réactives du directeur
   director_data <- reactive({
     req(survey_data())
-    # Filtrer les données en fonction de l'ID du directeur (groupecode)
     data_filtered <- survey_data() %>%
       filter(groupecode == input$user_id)
     
-    # Afficher une notification si aucune donnée n'est disponible
     if (nrow(data_filtered) == 0) {
       showNotification("Aucune donnée disponible pour cet identifiant.", type = "warning")
       return(NULL)
     }
     
-    # Appeler la fonction pour préparer les données du directeur
     prepare_director_data(
       data = data_filtered,
       code_groupe = input$user_id,
@@ -20,38 +17,82 @@ director_server <- function(input, output, session, survey_data, config) {
     )
   })
   
-  # Générer le checkboxGroupInput via renderUI
-  output$scaleCheckboxes <- renderUI({
+  # Interface de sélection d'échelle
+  output$scaleSelector <- renderUI({
     req(director_data())
-    checkboxGroupInput(
-      "selected_scales",
-      "Échelles à visualiser :",
-      choices = names(config$scales),  # Accès direct aux échelles
-      selected = names(config$scales)[1]
+    selectInput(
+      "selected_scale",  # Notez le singulier
+      "Échelle à visualiser :",
+      choices = director_data()$metadata$available_scales,
+      selected = director_data()$metadata$available_scales[1]
     )
+  })
+  
+  # Interface dynamique des scores disponibles
+  output$scoreSelector <- renderUI({
+    req(director_data(), input$selected_scale)
+    
+    # Obtenir la configuration de l'échelle sélectionnée
+    scale_config <- config$scales[[input$selected_scale]]
+    
+    # Préparer les choix de scores
+    score_choices <- c()
+    if (isTRUE(scale_config$scoring$total)) {
+      score_choices <- c(score_choices, "Score global" = "total_score")
+    }
+    
+    if (!is.null(scale_config$scoring$subscales)) {
+      subscore_choices <- setNames(
+        names(scale_config$scoring$subscales),
+        paste("Sous-score:", names(scale_config$scoring$subscales))
+      )
+      score_choices <- c(score_choices, subscore_choices)
+    }
+    
+    # Création du widget de sélection des scores
+    checkboxGroupInput(
+      "selected_scores",
+      "Scores à afficher :",
+      choices = score_choices,
+      selected = if ("total" %in% score_choices) "total" else NULL
+    )
+  })
+  
+  # Préparation des données pour la visualisation
+  visualization_data <- reactive({
+    req(director_data(), input$selected_scale, input$selected_scores)
+    
+    plot_data <- director_data()$stats %>%
+      filter(
+        scale == input$selected_scale,
+        score_type %in% input$selected_scores
+      )
+    
+    if (nrow(plot_data) == 0) {
+      showNotification("Aucune donnée à afficher pour la sélection actuelle.", type = "warning")
+      return(NULL)
+    }
+    
+    plot_data
   })
   
   # Graphique d'évolution
   output$evolution_plot <- renderPlot({
-    req(director_data(), input$selected_scales)
+    req(visualization_data())
     
-    plot_data <- director_data()$stats %>%
-      filter(scale %in% input$selected_scales)
-    
-    if (nrow(plot_data) == 0) {
-      showNotification("Aucune donnée à afficher pour les échelles sélectionnées.", type = "warning")
-      return(NULL)
-    }
-    
-    ggplot(plot_data, aes(x = period, y = mean_group, color = scale)) +
-      geom_line() +
+    ggplot(visualization_data(), 
+           aes(x = period, y = mean_group, color = score_type)) +
+      geom_line(aes(linetype = group_type)) +
       geom_point(aes(size = n_group)) +
       scale_size_continuous(name = "Nombre de réponses") +
       labs(
-        title = paste("Évolution des scores pour le groupe", input$user_id),
+        title = sprintf("Évolution des scores de l'échelle %s pour le groupe %s",
+                        input$selected_scale,
+                        input$user_id),
         x = "Période",
         y = "Score moyen",
-        color = "Échelle"
+        color = "Type de score",
+        linetype = "Type de groupe"
       ) +
       theme_minimal() +
       theme(
@@ -60,38 +101,14 @@ director_server <- function(input, output, session, survey_data, config) {
       )
   })
   
-  # Tableau récapitulatif
-  output$stats_table <- renderTable({
-    req(director_data(), input$selected_scales)
-    
-    table_data <- director_data()$stats %>%
-      filter(scale %in% input$selected_scales)
-    
-    if (nrow(table_data) == 0) {
-      showNotification("Aucune donnée disponible pour le tableau.", type = "warning")
-      return(NULL)
-    }
-    
-    table_data %>%
-      select(
-        "Période" = period,
-        "Échelle" = scale,
-        "Type de groupe" = group_type,
-        "N observations" = n_group,
-        "Score moyen" = mean_group
-      ) %>%
-      arrange(Période, Échelle, `Type de groupe`) %>%
-      mutate(
-        Période = format(Période, "%B %Y"),
-        `Score moyen` = round(`Score moyen`, 2)
-      )
-  })
-  
-  # Contenu principal pour le directeur
+  # Interface principale
   output$director_results <- renderUI({
     req(director_data())
     tagList(
-      uiOutput("scaleCheckboxes"),
+      fluidRow(
+        column(4, uiOutput("scaleSelector")),
+        column(8, uiOutput("scoreSelector"))
+      ),
       h3("Graphique d'évolution des scores"),
       plotOutput("evolution_plot"),
       h3("Tableau récapitulatif"),
