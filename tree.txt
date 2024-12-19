@@ -1,4 +1,5 @@
 .
+├── LICENSE.md
 ├── R
 │   ├── core
 │   │   ├── analysis.R
@@ -29,4 +30,4 @@
 │   └── tests.R
 └── tree.txt
 
-9 directories, 21 files
+9 directories, 22 files
