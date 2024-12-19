@@ -1,121 +1,132 @@
 teacher_server <- function(input, output, session, survey_data, config) {
-  
-  prepared_data <- reactive({
+  # Données réactives de l'enseignant
+  teacher_data <- reactive({
+    req(survey_data())
     prepare_teacher_data(
-      data = survey_data(), 
-      id_personnel = input$user_id, 
+      data = survey_data(),
+      id_personnel = input$user_id,
       config = config
     )
   })
   
-  output$scale_selector <- renderUI({
-    req(prepared_data())
-    scales <- names(prepared_data()$individual_scores)
-    checkboxGroupInput(
-      "selected_scales",
-      "Sélectionner les échelles à visualiser:",
-      choices = scales,
-      selected = scales[1]
+  # Interface de sélection d'échelle
+  output$scaleSelector <- renderUI({
+    req(teacher_data())
+    selectInput(
+      "selected_scale",
+      "Échelle à visualiser :",
+      choices = teacher_data()$metadata$available_scales,
+      selected = teacher_data()$metadata$available_scales[1]
     )
   })
   
-  output$personal_scores_plot <- renderPlot({
-    req(prepared_data(), input$selected_scales)
+  # Interface dynamique des scores disponibles
+  output$scoreSelector <- renderUI({
+    req(teacher_data(), input$selected_scale)
     
-    # Préparation des données individuelles
-    individual_data <- map_dfr(input$selected_scales, function(scale) {
-      prepared_data()$individual_scores[[scale]] %>%
-        select(timestamp, total_score) %>%
-        mutate(
-          scale = scale,
-          temps = dense_rank(timestamp),
-          date = format(timestamp, "%d/%m/%Y"),
-          type = "Score personnel"
-        ) %>%
-        arrange(timestamp) %>%
-        mutate(
-          label_temps = if(n() == 1) {
-            "Mesure unique"
-          } else {
-            paste("Mesure", temps, "-", date)
-          }
-        )
-    })
+    # Obtenir la configuration de l'échelle sélectionnée
+    scale_config <- config$scales[[input$selected_scale]]
     
-    # Utilisation des moyennes de groupe déjà calculées
-    group_data <- map_dfr(input$selected_scales, function(scale) {
-      prepared_data()$group_means[[scale]] %>%
-        select(total_score) %>%
-        mutate(
-          scale = scale,
-          type = "Moyenne du groupe"
-        ) %>%
-        crossing(
-          timestamp = unique(individual_data$timestamp),
-          temps = unique(individual_data$temps),
-          label_temps = unique(individual_data$label_temps)
-        )
-    })
+    # Préparer les choix de scores
+    score_choices <- c()
+    if (isTRUE(scale_config$scoring$total)) {
+      score_choices <- c(score_choices, "Score global" = "total_score")
+    }
     
-    # Combinaison des données
-    plot_data <- bind_rows(individual_data, group_data)
+    if (!is.null(scale_config$scoring$subscales)) {
+      subscore_choices <- setNames(
+        names(scale_config$scoring$subscales),
+        paste("Sous-score:", names(scale_config$scoring$subscales))
+      )
+      score_choices <- c(score_choices, subscore_choices)
+    }
     
-    if(length(unique(plot_data$temps)) == 1) {
+    checkboxGroupInput(
+      "selected_scores",
+      "Scores à afficher :",
+      choices = score_choices,
+      selected = if ("total_score" %in% score_choices) "total_score" else NULL
+    )
+  })
+  
+  # Préparation des données pour la visualisation
+  visualization_data <- reactive({
+    req(teacher_data(), input$selected_scale, input$selected_scores)
+    
+    plot_data <- teacher_data()$stats %>%
+      filter(
+        scale == input$selected_scale,
+        score_type %in% input$selected_scores
+      )
+    
+    if (nrow(plot_data) == 0) {
+      showNotification("Aucune donnée à afficher pour la sélection actuelle.", type = "warning")
+      return(NULL)
+    }
+    
+    plot_data
+  })
+  
+  # Graphique d'évolution
+  output$evolution_plot <- renderPlot({
+    req(visualization_data())
+    
+    n_measurements <- length(unique(visualization_data()$period))
+    
+    if (n_measurements == 1) {
       # Graphique pour une seule mesure
-      ggplot(plot_data, aes(x = scale, y = total_score, fill = type)) +
-        geom_col(data = subset(plot_data, type == "Score personnel"), 
+      ggplot(visualization_data(), 
+             aes(x = score_type, y = score_value, fill = measurement_type)) +
+        geom_col(data = . %>% filter(measurement_type == "Score personnel"),
                  position = position_dodge()) +
-        geom_hline(data = subset(plot_data, type == "Moyenne du groupe"),
-                   aes(yintercept = total_score, color = type),
+        geom_hline(data = . %>% filter(measurement_type == "Moyenne du groupe"),
+                   aes(yintercept = score_value, color = measurement_type),
                    linetype = "dashed", linewidth = 1) +
-        scale_fill_manual(values = c("Score personnel" = "#2C3E50", 
+        scale_fill_manual(values = c("Score personnel" = "#2C3E50",
                                      "Moyenne du groupe" = "#E74C3C")) +
-        scale_color_manual(values = c("Score personnel" = "#2C3E50", 
+        scale_color_manual(values = c("Score personnel" = "#2C3E50",
                                       "Moyenne du groupe" = "#E74C3C")) +
         theme_minimal() +
         labs(
-          title = "Scores par échelle",
-          subtitle = unique(plot_data$date),
-          x = "Échelle",
-          y = "Score"
+          title = sprintf("Scores pour l'échelle %s", input$selected_scale),
+          x = "Type de score",
+          y = "Valeur",
+          fill = "Type de mesure",
+          color = "Type de mesure"
         ) +
         theme(axis.text.x = element_text(angle = 45, hjust = 1))
     } else {
       # Graphique pour l'évolution temporelle
-      ggplot(plot_data, aes(x = temps, y = total_score, group = interaction(scale, type))) +
-        geom_line(aes(color = scale, linetype = type)) +
-        geom_point(data = subset(plot_data, type == "Score personnel"),
-                   aes(color = scale), size = 3) +
+      ggplot(visualization_data(),
+             aes(x = period, y = score_value, 
+                 color = score_type, linetype = measurement_type)) +
+        geom_line() +
+        geom_point(data = . %>% filter(measurement_type == "Score personnel"),
+                   size = 3) +
         theme_minimal() +
         labs(
-          title = "Évolution des scores par échelle",
-          x = "Temps de mesure",
+          title = sprintf("Évolution des scores pour l'échelle %s", input$selected_scale),
+          x = "Période",
           y = "Score",
-          color = "Échelle",
-          linetype = "Type de score"
-        ) +
-        scale_x_continuous(
-          breaks = plot_data$temps,
-          labels = plot_data$label_temps
+          color = "Type de score",
+          linetype = "Type de mesure"
         ) +
         scale_linetype_manual(values = c("Score personnel" = "solid",
                                          "Moyenne du groupe" = "dashed")) +
-        scale_color_brewer(palette = "Set2") +
         theme(axis.text.x = element_text(angle = 45, hjust = 1))
     }
   })
   
+  # Interface principale
   output$teacher_results <- renderUI({
+    req(teacher_data())
     tagList(
-      uiOutput("scale_selector"),
-      tabsetPanel(
-        id = "teacherTabs",
-        tabPanel(
-          "Scores personnels",
-          h3("Vos scores personnels"),
-          plotOutput("personal_scores_plot")
-        )
-      )
+      fluidRow(
+        column(4, uiOutput("scaleSelector")),
+        column(8, uiOutput("scoreSelector"))
+      ),
+      h3("Évolution de vos scores"),
+      plotOutput("evolution_plot")
     )
   })
 }

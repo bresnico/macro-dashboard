@@ -81,6 +81,26 @@ ui <- fluidPage(
 
 # Le serveur
 server <- function(input, output, session) {
+  # Créer un reactiveValues pour gérer l'état global
+  app_state <- reactiveValues(
+    current_view = NULL,
+    data = NULL,
+    valid_id = FALSE
+  )
+  
+  # Observer le changement de type d'utilisateur
+  observeEvent(input$user_type, {
+    # Réinitialiser l'état
+    app_state$data <- NULL
+    app_state$valid_id <- FALSE
+    app_state$current_view <- input$user_type
+    
+    # Réinitialiser l'input ID
+    updateTextInput(session, "user_id", value = "")
+    
+    # Notification à l'utilisateur
+    showNotification("Interface réinitialisée", type = "message")
+  })
   
   # UI conditionnelle pour le champ d'identification
   output$id_field <- renderUI({
@@ -99,14 +119,14 @@ server <- function(input, output, session) {
               placeholder = field_placeholder)
   })
   
-  # Reactive value pour stocker les données
-  survey_data <- reactiveVal(NULL)
-  
-  # Reactive value pour stocker la validité de l'identifiant
-  valid_id <- reactiveVal(FALSE)
-  
   # Chargement des données et validation de l'identifiant
   observeEvent(input$view_data, {
+    # Vérifier si le type d'utilisateur a changé
+    if (app_state$current_view != input$user_type) {
+      app_state$current_view <- input$user_type
+      app_state$data <- NULL
+      app_state$valid_id <- FALSE
+    }
     # Informer l'utilisateur
     showNotification("Chargement des données...", 
                      type = "message", 
@@ -118,7 +138,7 @@ server <- function(input, output, session) {
         removeNotification("loading")
         showNotification("Erreur de connexion à LimeSurvey", 
                          type = "error")
-        valid_id(FALSE)
+        app_state$valid_id <- FALSE
         return()
       }
       
@@ -129,7 +149,7 @@ server <- function(input, output, session) {
         removeNotification("loading")
         showNotification("Aucune donnée disponible", 
                          type = "warning")
-        valid_id(FALSE)
+        app_state$valid_id <- FALSE
         return()
       }
       
@@ -144,11 +164,11 @@ server <- function(input, output, session) {
           timestamp  = submitdate
         )
       
+      app_state$data <- processed_data
+      
       # Afficher les noms des colonnes
       print("Colonnes de processed_data :")
       print(names(processed_data))
-      
-      survey_data(processed_data)
       
       # Validation de l'identifiant pour enseignants et directeurs
       user_type <- input$user_type
@@ -162,12 +182,13 @@ server <- function(input, output, session) {
         valid_ids <- credentials$researcher_codes
       }
       
+      # Validation de l'identifiant
       if (user_id %in% valid_ids) {
-        valid_id(TRUE)
+        app_state$valid_id <- TRUE
         showNotification("Données chargées avec succès", 
                          type = "message")
       } else {
-        valid_id(FALSE)
+        app_state$valid_id <- FALSE  # Correction de la valeur
         showNotification("Le code saisi est inconnu.", 
                          type = "error")
       }
@@ -180,20 +201,23 @@ server <- function(input, output, session) {
         paste("Erreur lors du chargement :", e$message), 
         type = "error"
       )
-      valid_id(FALSE)
+      app_state$valid_id <- FALSE
+      
+      app_state$data <- processed_data
+      app_state$valid_id <- user_id %in% valid_ids
     })
   })
   
   # Appel des serveurs spécifiques selon le type d'utilisateur
   observeEvent(input$view_data, {
-    req(valid_id())
+    req(app_state$valid_id)
     
     if(input$user_type == "teacher") {
-      teacher_server(input, output, session, survey_data, config)
+      teacher_server(input, output, session, reactive(app_state$data), config)
     } else if(input$user_type == "director") {
-      director_server(input, output, session, survey_data, config)
+      director_server(input, output, session, reactive(app_state$data), config)
     } else if(input$user_type == "researcher") {
-      researcher_server(input, output, session, survey_data, config, credentials)
+      researcher_server(input, output, session, reactive(app_state$data), config, credentials)
     }
   })
 }
