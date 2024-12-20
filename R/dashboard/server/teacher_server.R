@@ -49,74 +49,104 @@ teacher_server <- function(input, output, session, survey_data, config) {
     )
   })
   
-  # Préparation des données pour la visualisation
-  visualization_data <- reactive({
-    req(teacher_data(), input$selected_scale, input$selected_scores)
-    
-    plot_data <- teacher_data()$stats %>%
-      filter(
-        scale == input$selected_scale,
-        score_type %in% input$selected_scores
-      )
-    
-    if (nrow(plot_data) == 0) {
-      showNotification("Aucune donnée à afficher pour la sélection actuelle.", type = "warning")
-      return(NULL)
-    }
-    
-    plot_data
-  })
+# Préparation des données pour la visualisation (inchangé)
+visualization_data <- reactive({
+  req(teacher_data(), input$selected_scale, input$selected_scores)
   
-  # Graphique d'évolution
-  output$evolution_plot <- renderPlot({
-    req(visualization_data())
-    
-    n_measurements <- length(unique(visualization_data()$period))
-    
-    if (n_measurements == 1) {
-      # Graphique pour une seule mesure
-      ggplot(visualization_data(), 
-             aes(x = score_type, y = score_value, fill = measurement_type)) +
-        geom_col(data = . %>% filter(measurement_type == "Score personnel"),
-                 position = position_dodge()) +
-        geom_hline(data = . %>% filter(measurement_type == "Moyenne du groupe"),
-                   aes(yintercept = score_value, color = measurement_type),
-                   linetype = "dashed", linewidth = 1) +
-        scale_fill_manual(values = c("Score personnel" = "#2C3E50",
-                                     "Moyenne du groupe" = "#E74C3C")) +
-        scale_color_manual(values = c("Score personnel" = "#2C3E50",
-                                      "Moyenne du groupe" = "#E74C3C")) +
-        theme_minimal() +
-        labs(
-          title = sprintf("Scores pour l'échelle %s", input$selected_scale),
-          x = "Type de score",
-          y = "Valeur",
-          fill = "Type de mesure",
-          color = "Type de mesure"
-        ) +
-        theme(axis.text.x = element_text(angle = 45, hjust = 1))
-    } else {
-      # Graphique pour l'évolution temporelle
-      ggplot(visualization_data(),
-             aes(x = period, y = score_value, 
-                 color = score_type, linetype = measurement_type)) +
-        geom_line() +
-        geom_point(data = . %>% filter(measurement_type == "Score personnel"),
-                   size = 3) +
-        theme_minimal() +
-        labs(
-          title = sprintf("Évolution des scores pour l'échelle %s", input$selected_scale),
-          x = "Période",
-          y = "Score",
-          color = "Type de score",
-          linetype = "Type de mesure"
-        ) +
-        scale_linetype_manual(values = c("Score personnel" = "solid",
-                                         "Moyenne du groupe" = "dashed")) +
-        theme(axis.text.x = element_text(angle = 45, hjust = 1))
-    }
-  })
+  plot_data <- teacher_data()$stats %>%
+    filter(
+      scale == input$selected_scale,
+      score_type %in% input$selected_scores
+    )
   
+# Débogage
+  cat("Structure des données de visualisation :\n")
+  str(plot_data)
+  
+  cat("\nRésumé des dates par type de mesure :\n")
+  print(plot_data %>%
+    group_by(measurement_type) %>%
+    summarise(
+      n_obs = n(),
+      min_date = min(period),
+      max_date = max(period)
+    ))
+
+  if (nrow(plot_data) == 0) {
+    showNotification("Aucune donnée à afficher pour la sélection actuelle.", type = "warning")
+    return(NULL)
+  }
+  
+  plot_data
+})
+
+# Graphique d'évolution
+output$evolution_plot <- renderPlot({
+  req(visualization_data())
+  
+  # Séparation des données
+  individual_data <- visualization_data() %>%
+    filter(measurement_type == "Score personnel")
+  
+  group_data <- visualization_data() %>%
+    filter(measurement_type == "Moyenne du groupe")
+  
+  # Analyse temporelle
+  dates_individuelles <- sort(unique(individual_data$period))
+  n_measurements <- length(dates_individuelles)
+
+  cat("individual data period:")
+  print(individual_data$period)
+  
+  if (n_measurements == 1) {
+    # Code pour une seule mesure (inchangé)
+    ggplot(visualization_data(), 
+           aes(x = score_type, y = score_value, fill = measurement_type)) +
+      geom_col(data = . %>% filter(measurement_type == "Score personnel"),
+               position = position_dodge()) +
+      geom_hline(data = . %>% filter(measurement_type == "Moyenne du groupe"),
+                 aes(yintercept = score_value, color = measurement_type),
+                 linetype = "dashed", linewidth = 1) +
+      scale_fill_manual(values = c("Score personnel" = "#2C3E50",
+                                   "Moyenne du groupe" = "#E74C3C")) +
+      scale_color_manual(values = c("Score personnel" = "#2C3E50",
+                                    "Moyenne du groupe" = "#E74C3C")) +
+      theme_minimal() +
+      labs(
+        title = sprintf("Scores pour l'échelle %s", input$selected_scale),
+        x = "Type de score",
+        y = "Valeur",
+        fill = "Type de mesure",
+        color = "Type de mesure"
+      ) +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+      
+  } else {
+     # Commencer par établir la base du graphique avec les données individuelles
+    ggplot() +
+  # Tracer les données individuelles
+  geom_line(data = individual_data, aes(x = period, y = score_value, color = score_type), linewidth = 0.8) +
+  geom_point(data = individual_data, aes(x = period, y = score_value, color = score_type), size = 3) +
+  # Ajouter les lignes de moyenne (moyennes de groupe)
+  geom_hline(data = group_data, aes(yintercept = score_value, color = score_type), linetype = "dashed", alpha = 0.5) +
+  # Personnalisation
+  scale_color_brewer(palette = "Set2") +
+  theme_minimal() +
+  labs(
+    title = sprintf("Évolution des scores pour l'échelle %s", input$selected_scale),
+    subtitle = sprintf("Moyenne du groupe en %s", format(unique(group_data$period), "%B %Y")),
+    x = "Période",
+    y = "Score",
+    color = "Type de score"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    panel.grid.minor = element_blank()
+  )
+ }
+})
+
   # Interface principale
   output$teacher_results <- renderUI({
     req(teacher_data())
