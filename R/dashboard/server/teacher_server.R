@@ -57,6 +57,15 @@ visualization_data <- reactive({
     filter(
       scale == input$selected_scale,
       score_type %in% input$selected_scores
+    ) |> 
+    mutate(
+      # Pour les mesures individuelles: garder la date exacte
+      period = if_else(
+        measurement_type == "Score personnel",
+        as.Date(period),
+        # Pour les moyennes de groupe: premier jour du mois
+        floor_date(period, "month") %>% as.Date()
+      )
     )
   
 # Débogage
