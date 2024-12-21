@@ -133,26 +133,27 @@ output$evolution_plot <- renderPlot({
   } else {
      # Commencer par établir la base du graphique avec les données individuelles
     ggplot() +
-  # Tracer les données individuelles
-  geom_line(data = individual_data, aes(x = period, y = score_value, color = score_type), linewidth = 0.8) +
-  geom_point(data = individual_data, aes(x = period, y = score_value, color = score_type), size = 3) +
-  # Ajouter les lignes de moyenne (moyennes de groupe)
-  geom_hline(data = group_data, aes(yintercept = score_value, color = score_type), linetype = "dashed", alpha = 0.5) +
-  # Personnalisation
-  scale_color_brewer(palette = "Set2") +
-  theme_minimal() +
-  labs(
-    title = sprintf("Évolution des scores pour l'échelle %s", input$selected_scale),
-    subtitle = sprintf("Moyenne du groupe en %s", format(unique(group_data$period), "%B %Y")),
-    x = "Période",
-    y = "Score",
-    color = "Type de score"
-  ) +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "bottom",
-    panel.grid.minor = element_blank()
-  )
+      # Tracer les données individuelles
+      geom_line(data = individual_data, aes(x = period, y = score_value, color = score_type), linewidth = 0.8) +
+      geom_point(data = individual_data, aes(x = period, y = score_value, color = score_type), size = 3) +
+      # Ajouter les données du groupe (1 point par mois avec la moyenne du groupe)
+      geom_point(data = group_data, aes(x = period, y = score_value, color = score_type), size = 5, shape = 24) +
+      #geom_hline(data = group_data, aes(yintercept = score_value, color = score_type), linetype = "dashed", alpha = 0.5) +
+      # Personnalisation
+      scale_color_brewer(palette = "Set2") +
+      theme_minimal() +
+      labs(
+        title = sprintf("Évolution des scores pour l'échelle %s", input$selected_scale),
+        subtitle = sprintf("Moyenne du groupe en %s", format(unique(group_data$period), "%B %Y")),
+        x = "Période",
+        y = "Score",
+        color = "Type de score"
+      ) +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "bottom",
+        panel.grid.minor = element_blank()
+      )
  }
 })
 

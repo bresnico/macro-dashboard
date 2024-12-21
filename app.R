@@ -167,7 +167,7 @@ server <- function(input, output, session) {
       app_state$data <- processed_data
       
       # Afficher les noms des colonnes
-      print("Colonnes de processed_data :")
+      cat("Colonnes de processed_data :")
       print(names(processed_data))
       
       # Validation de l'identifiant pour enseignants et directeurs
