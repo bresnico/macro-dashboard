@@ -126,63 +126,79 @@ get_limesurvey_data <- function(survey_id, config) {
 # Conversion des réponses
 
 convert_responses <- function(data, config) {
-  # Conversion des réponses pour chaque échelle
+  # Fonction utilitaire pour convertir et potentiellement inverser une réponse
+  convert_scale_value <- function(x, prefix, scale_type, reversed = FALSE) {
+    values <- suppressWarnings(as.numeric(sub(prefix, "", x)))
+    
+    if (!is.null(scale_type)) {
+      min_val <- scale_type$min_value
+      max_val <- scale_type$max_value
+      
+      # Valider la plage
+      values <- ifelse(values >= min_val & values <= max_val, values, NA)
+      
+      # Inverser si nécessaire
+      if (reversed && !is.na(values)) {
+        values <- (max_val + min_val) - values
+      }
+    }
+    
+    return(values)
+  }
+  
+  # Statistiques de conversion
+  stats <- list(
+    scales = list(),
+    demographics = list()
+  )
+  
+  # 1. Conversion des échelles
   for (scale_name in names(config$scales)) {
     scale_config <- config$scales[[scale_name]]
+    scale_type <- config$scale_types[[scale_config$type]]
+    prefix <- scale_config$response_prefix %||% "AO0"
     
-    # Obtenir les identifiants des items
-    item_ids <- sapply(scale_config$items, function(x) x$id)
-    
-    # Vérifier que les colonnes existent dans les données
-    item_ids_in_data <- item_ids[item_ids %in% names(data)]
-    
-    if (length(item_ids_in_data) > 0) {
-      # Conversion des réponses
-      data[item_ids_in_data] <- lapply(data[item_ids_in_data], function(x) {
-        # Utiliser le 'response_prefix' du YAML s'il est défini, sinon valeur par défaut
-        response_prefix <- ifelse(!is.null(scale_config$response_prefix), scale_config$response_prefix, "AO0")
-        # Convertir la réponse en numérique
-        as.numeric(sub(response_prefix, "", x))
-      })
+    # Traiter chaque item individuellement pour gérer l'inversion
+    for (item in scale_config$items) {
+      item_id <- item$id
+      
+      if (item_id %in% names(data)) {
+        data[[item_id]] <- convert_scale_value(
+          data[[item_id]], 
+          prefix = prefix,
+          scale_type = scale_type,
+          reversed = item$reversed
+        )
+        
+        # Statistiques par item
+        stats$scales[[scale_name]]$items[[item_id]] <- list(
+          reversed = item$reversed,
+          valid_values = sum(!is.na(data[[item_id]])),
+          invalid_values = sum(is.na(data[[item_id]]))
+        )
+      }
     }
   }
   
-  # Conversion des données démographiques
-  for (var_name in names(config$demographics)) {
-    dem_config <- config$demographics[[var_name]]
-    field <- paste0(dem_config$group, dem_config$question)
-    
-    if(field %in% names(data)) {
-      data[[field]] <- factor(
-        data[[field]],
-        levels = names(dem_config$labels),
-        labels = dem_config$labels
-      )
-    }
-  }
+  # [Reste du code pour démographiques inchangé...]
   
-  return(data)
-}
-
-# Vérification des conversions
-
-verify_conversion <- function(data, config) {
-  for (scale_name in names(config$scales)) {
-    scale_config <- config$scales[[scale_name]]
-    # Obtenir les identifiants des items
-    item_ids <- sapply(scale_config$items, function(x) x$id)
+  # Mise à jour du résumé pour inclure les items inversés
+  cat("\nConversion des échelles :\n")
+  for (scale_name in names(stats$scales)) {
+    s <- stats$scales[[scale_name]]
+    n_reversed <- sum(sapply(s$items, function(x) x$reversed))
     
-    # Vérifier si les items existent dans les données
-    item_ids_in_data <- item_ids[item_ids %in% names(data)]
+    cat(sprintf("%s: %d items (%d inversés)\n",
+                scale_name, length(s$items), n_reversed))
     
-    if (length(item_ids_in_data) > 0) {
-      scale_values <- unlist(data[item_ids_in_data])
-      scale_range <- range(scale_values, na.rm = TRUE)
-      cat(scale_name, "range:", scale_range[1], "to", scale_range[2], "\n")
-      scale_na <- sum(is.na(scale_values))
-      cat("Missing values -", scale_name, ":", scale_na, "\n")
-    } else {
-      cat("Aucun item trouvé pour l'échelle", scale_name, "\n")
+    # Détails des items
+    for (item_id in names(s$items)) {
+      item <- s$items[[item_id]]
+      cat(sprintf("  - %s: %s, %d valides, %d invalides\n",
+                  item_id,
+                  if(item$reversed) "inversé" else "normal",
+                  item$valid_values,
+                  item$invalid_values))
     }
   }
   
@@ -191,89 +207,59 @@ verify_conversion <- function(data, config) {
 
 # Calcul des scores
 
-calculate_scale_scores <- function(data, scale_name, config) {
+old_calculate_scale_scores <- function(data, scale_name, config) {
+  # Validation du nom de l'échelle
   if (!scale_name %in% names(config$scales)) {
     return(NULL)
   }
   
+  # Récupération de la configuration de l'échelle
   scale_config <- config$scales[[scale_name]]
-  item_list <- scale_config$items
-  item_ids <- sapply(item_list, function(x) x$id)
+  item_ids <- sapply(scale_config$items, function(x) x$id)
   
-  # Vérifions d'abord si nous avons suffisamment de données valides
+  # Vérification de la présence des items dans les données 
   item_ids_in_data <- item_ids[item_ids %in% names(data)]
   if (length(item_ids_in_data) == 0) {
     return(NULL)
   }
   
-  # Préparation des données avec gestion des valeurs manquantes
-  data_scored <- data
-  valid_items <- character(0)
-  
-  for (item in item_list) {
-    item_id <- item$id
-    if (!item_id %in% names(data_scored)) {
-      next
-    }
-    
-    # Tentative de conversion en numérique
-    converted_values <- try(as.numeric(data_scored[[item_id]]), silent = TRUE)
-    if (!inherits(converted_values, "try-error") && !all(is.na(converted_values))) {
-      data_scored[[item_id]] <- converted_values
-      valid_items <- c(valid_items, item_id)
-      
-      # Inversion si nécessaire
-      if (item$reversed == TRUE) {
-        scale_info <- config$scale_types[[scale_config$type]]
-        max_value <- as.numeric(scale_info$max_value)
-        min_value <- as.numeric(scale_info$min_value)
-        data_scored[[item_id]] <- (max_value + min_value) - data_scored[[item_id]]
-      }
-    }
-  }
-  
   # Vérification du taux minimum de réponses valides requis
   min_responses_required <- config$validation$min_responses[[scale_name]]
-  valid_rate <- length(valid_items) / length(item_ids)
+  valid_rate <- length(item_ids_in_data) / length(item_ids)
   
   if (valid_rate < min_responses_required) {
     return(NULL)
   }
   
-  # Construction du dataframe de sortie avec les champs obligatoires
-  scores <- data_scored %>%
+  # Construction du dataframe initial avec les champs obligatoires
+  scores <- data %>%
     select(
       timestamp = datestamp,
       group_id = groupecode,
       person_id = !!sym(paste0(config$identification$personal_id$group, config$identification$personal_id$question)),
-      all_of(valid_items)
+      all_of(item_ids_in_data)
     )
   
-  # Explicit scoring logic based on configuration
+  # Calcul des scores selon la configuration
   scoring_config <- scale_config$scoring
   
-  # Calculate total score only if explicitly specified as TRUE
+  # Calcul score total si configuré
   if (isTRUE(scoring_config$total)) {
     scores <- scores %>%
       rowwise() %>%
       mutate(
-        total_score = mean(c_across(all_of(valid_items)), na.rm = TRUE)
+        total_score = mean(c_across(all_of(item_ids_in_data)), na.rm = TRUE)
       ) %>%
       ungroup()
   }
   
-  # Calculate subscales if they are defined
+  # Calcul des sous-échelles si définies
   if (!is.null(scoring_config$subscales)) {
     for (subscale_name in names(scoring_config$subscales)) {
-      # Get the items for this subscale
       subscale_items <- scoring_config$subscales[[subscale_name]]$items
+      available_subscale_items <- intersect(subscale_items, item_ids_in_data)
       
-      # Verify which items are actually available in our valid items
-      available_subscale_items <- intersect(subscale_items, valid_items)
-      
-      # Only calculate if we have enough items
       if (length(available_subscale_items) > 0) {
-        # Calculate the subscale score
         scores <- scores %>%
           rowwise() %>%
           mutate(
@@ -284,33 +270,21 @@ calculate_scale_scores <- function(data, scale_name, config) {
     }
   }
   
-  # Verify we have at least one score calculated
-  if (ncol(scores) <= 3) {  # Only timestamp, group_id, and person_id columns
-    return(NULL)
-  }
-  
-  # Nettoyage final du dataframe scores
+  # Sélection des colonnes pertinentes pour la sortie
   keep_columns <- c("timestamp", "group_id", "person_id")
-  
-  # Ajouter le score total s'il a été calculé
   if (isTRUE(scoring_config$total)) {
     keep_columns <- c(keep_columns, "total_score")
   }
-  
-  # Ajouter les noms des sous-échelles si elles ont été calculées
   if (!is.null(scoring_config$subscales)) {
     keep_columns <- c(keep_columns, names(scoring_config$subscales))
   }
   
-  # Ne conserver que les colonnes nécessaires
-  scores <- scores %>%
-    select(all_of(keep_columns))
-  
-  # Vérifier qu'il reste au moins un score calculé
-  if (ncol(scores) <= 3) {  # Seulement timestamp, group_id, et person_id
+  # Si aucun score calculé, retourner NULL
+  if (length(keep_columns) <= 3) {
     return(NULL)
   }
   
-  return(scores)
-  
+  # Retourner le dataframe final avec uniquement les colonnes nécessaires
+  scores %>%
+    select(all_of(keep_columns))
 }

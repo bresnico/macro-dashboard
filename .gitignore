@@ -45,3 +45,4 @@ temp/
 config/credentials.yml
 tests/
 *.rds
+/.quarto/

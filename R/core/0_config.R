@@ -1,3 +1,8 @@
+# libraries nécessaires
+library(tidyverse)
+library(limer)
+
+# fonction pour charger les données LimeSurvey
 setup_limesurvey_connection <- function() {
   # Chargement des credentials
   tryCatch({

@@ -1,0 +1,135 @@
+---
+title: "Plateforme de suivi du développement professionnel"
+format: dashboard
+server: shiny
+---
+
+
+```{r}
+#| context: setup
+
+# package
+# 3 dataset
+```
+
+# Bienvenue
+
+## Row {height=30%}
+
+```{r}
+#| content: "valuebox"
+#| title: "Nombre d'observations complète saisies"
+
+# list()
+print("list")
+
+```
+
+```{r}
+#| content: "valuebox"
+#| title: "Nombre de groupes impliqués"
+
+
+print("groupe")
+
+
+```
+
+```{r}
+#| content: "valuebox"
+#| title: "Date de la màj de la db"
+
+print("updated")
+
+
+```
+
+## Row {height=20%}
+
+::: {.card title="Source des données"}
+
+nombre d'échjelles, etc.
+:::
+
+# Espace profs
+
+## Row {height=30%}
+
+```{r}
+#| title: "identification"
+print("entrer l'id, valable ou pas, tri des données")
+
+```
+
+```{r}
+#| content: "valuebox"
+#| title: "Nombre d'observations complète pour l'ID"
+
+# list()
+print("list")
+
+```
+
+```{r}
+#| content: "valuebox"
+#| title: "Groupe d'appartenance"
+
+
+print("groupe")
+
+
+```
+
+```{r}
+#| content: "valuebox"
+#| title: "Date de la màj de la db"
+
+print("updated")
+
+
+```
+
+## Row {height=70%}
+
+
+### {.toolbar} {width=30%}
+
+```{r}
+
+# choix de l'échelle parmi une liste
+
+# affichage dynamique des choix à cocher pour score globlal et sous-scores selon disponibilités
+
+actionButton("refresh", "Rafraîchir", class = "btn-primary")
+```
+
+### {.tabset}
+
+```{r}
+#| title: "Plot"
+#| 
+
+# plot relatif
+
+```
+
+
+```{r}
+#| title: "Table"
+#| 
+
+# table relative
+
+```
+
+
+# Espace direction
+
+# Espace recherche
+
+
+```{r}
+#| context: server
+
+
+```

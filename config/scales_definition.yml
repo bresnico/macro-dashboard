@@ -69,6 +69,7 @@ scale_types:
 scales:
   tses:
     id: "g06"
+    label: "Teacher Self-Efficacy Scale"
     type: "likert_9"
     response_prefix: "AO0"
     items:
@@ -100,13 +101,17 @@ scales:
       total: true
       subscales:
         student_engagement:
+          label: "Engagement des élèves"
           items: ["g06q18sq002", "g06q18sq003", "g06q18sq004", "g06q18sq011"]
         instructional_strategies:
+          label: "Stratégies d'enseignement"
           items: ["g06q18sq005", "g06q18sq009", "g06q18sq010", "g06q18sq012"]
         classroom_management:
+          label: "Gestion de classe"
           items: ["g06q18sq001", "g06q18sq006", "g06q18sq007", "g06q18sq008"]
   tes:
     id: "g07"
+    label: "TSES on the sky"
     type: "likert_4"
     response_prefix: "AO0"
     items:
