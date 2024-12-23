@@ -1,0 +1,314 @@
+# Configuration globale
+fake_data: false  # Mettre à false pour utiliser l'API LimeSurvey réelle
+identification:
+  personal_id:
+    group: "g01"
+    question: "q13"
+  group_code: "groupecode"
+  email:
+    group: "g00"
+    question: "q02"
+
+temporal:
+  source_field: "submitdate"
+  format: "YYYY-MM-DD HH:mm:ss"
+  default_grouping: "month"
+
+demographics:
+  age:
+    group: "g05"
+    question: "q08"
+    type: "categorical"
+    labels:
+      AO01: "20-29"
+      AO02: "30-39"
+      AO03: "40-49"
+      AO04: "50-59"
+      AO05: "60+"
+  gender:
+    group: "g05"
+    question: "q09"
+    type: "binary"
+    labels:
+      F: "Féminin"
+      M: "Masculin"
+  status:
+    group: "g05"
+    question: "q10"
+    type: "categorical"
+    labels:
+      AO01: "En formation"
+      AO02: "En activité"
+      AO03: "Autre"
+  experience:
+    group: "g05"
+    question: "q11"
+    type: "ordinal"
+    labels:
+      AO01: "0-5"
+      AO02: "6-10"
+      AO03: "10+"
+
+scale_types:
+  likert_4:
+    min_value: 1
+    max_value: 4
+  likert_5:
+    min_value: 1
+    max_value: 5
+  likert_6:
+    min_value: 1
+    max_value: 6
+  likert_7:
+    min_value: 1
+    max_value: 7
+  likert_9:
+    min_value: 1
+    max_value: 9
+
+scales:
+  tses:
+    id: "g06"
+    label: "Teacher Self-Efficacy Scale"
+    type: "likert_9"
+    response_prefix: "AO0"
+    items:
+      - id: "g06q18sq001"
+        reversed: false
+      - id: "g06q18sq002"
+        reversed: false
+      - id: "g06q18sq003"
+        reversed: false
+      - id: "g06q18sq004"
+        reversed: false
+      - id: "g06q18sq005"
+        reversed: false
+      - id: "g06q18sq006"
+        reversed: false
+      - id: "g06q18sq007"
+        reversed: false
+      - id: "g06q18sq008"
+        reversed: false
+      - id: "g06q18sq009"
+        reversed: false
+      - id: "g06q18sq010"
+        reversed: false
+      - id: "g06q18sq011"
+        reversed: false
+      - id: "g06q18sq012"
+        reversed: false
+    scoring:
+      total: true
+      subscales:
+        student_engagement:
+          label: "Engagement des élèves"
+          items: ["g06q18sq002", "g06q18sq003", "g06q18sq004", "g06q18sq011"]
+        instructional_strategies:
+          label: "Stratégies d'enseignement"
+          items: ["g06q18sq005", "g06q18sq009", "g06q18sq010", "g06q18sq012"]
+        classroom_management:
+          label: "Gestion de classe"
+          items: ["g06q18sq001", "g06q18sq006", "g06q18sq007", "g06q18sq008"]
+  tes:
+    id: "g07"
+    label: "TSES on the sky"
+    type: "likert_4"
+    response_prefix: "AO0"
+    items:
+      - id: "g07q19sq001"
+        reversed: false
+      - id: "g07q19sq002"
+        reversed: false
+      - id: "g07q19sq003"
+        reversed: false
+      - id: "g07q19sq004"
+        reversed: false
+      - id: "g07q19sq005"
+        reversed: false
+      - id: "g07q19sq006"
+        reversed: false
+      - id: "g07q19sq007"
+        reversed: false
+      - id: "g07q19sq008"
+        reversed: false
+      - id: "g07q19sq009"
+        reversed: false
+      - id: "g07q19sq010"
+        reversed: false
+      - id: "g07q19sq011"
+        reversed: false
+      - id: "g07q19sq012"
+        reversed: false
+    scoring:
+      total: false
+      subscales:
+        joie:
+          items: ["g07q19sq001", "g07q19sq002", "g07q19sq003", "g07q19sq004"]
+        colere:
+          items: ["g07q19sq005", "g07q19sq006", "g07q19sq007", "g07q19sq008"]
+        anxiete:
+          items: ["g07q19sq009", "g07q19sq010", "g07q19sq011", "g07q19sq012"]
+  smbm:
+    id: "g08"
+    type: "likert_7"
+    response_prefix: "AO0"
+    items:
+      - id: "g08q20sq001"
+        reversed: false
+      - id: "g08q20sq002"
+        reversed: false
+      - id: "g08q20sq003"
+        reversed: false
+      - id: "g08q20sq004"
+        reversed: false
+      - id: "g08q20sq005"
+        reversed: false
+      - id: "g08q20sq006"
+        reversed: false
+      - id: "g08q20sq007"
+        reversed: false
+      - id: "g08q20sq008"
+        reversed: false
+      - id: "g08q20sq009"
+        reversed: false
+      - id: "g08q20sq010"
+        reversed: false
+      - id: "g08q20sq011"
+        reversed: false
+      - id: "g08q20sq012"
+        reversed: false
+      - id: "g08q20sq013"
+        reversed: false
+      - id: "g08q20sq014"
+        reversed: false
+    scoring:
+      total: true
+      subscales:
+        fatigue_physique:
+          items: ["g08q20sq001", "g08q20sq002", "g08q20sq003", "g08q20sq004","g08q20sq005","g08q20sq006"]
+        lassitude_cognitive:
+          items: ["g08q20sq007", "g08q20sq008", "g08q20sq009", "g08q20sq010","g08q20sq011"]
+        epuisement_emotionnel:
+          items: ["g08q20sq012", "g08q20sq013", "g08q20sq014"]
+  cps:
+    id: "g09"
+    type: "likert_7"
+    response_prefix: "AO0"
+    items:
+      - id: "g09q21sq001"
+        reversed: false
+      - id: "g09q21sq002"
+        reversed: false
+      - id: "g09q21sq003"
+        reversed: false
+      - id: "g09q21sq004"
+        reversed: false
+      - id: "g09q21sq005"
+        reversed: false
+      - id: "g09q21sq006"
+        reversed: false
+      - id: "g09q21sq007"
+        reversed: false
+      - id: "g09q21sq008"
+        reversed: false
+      - id: "g09q21sq009"
+        reversed: false
+      - id: "g09q21sq010"
+        reversed: false
+      - id: "g09q21sq011"
+        reversed: false
+      - id: "g09q21sq012"
+        reversed: false
+      - id: "g09q21sq013"
+        reversed: false
+      - id: "g09q21sq014"
+        reversed: false
+      - id: "g09q21sq015"
+        reversed: false
+    scoring:
+      total: true
+      subscales:
+        competences_sociales:
+          items: ["g09q21sq001", "g09q21sq002", "g09q21sq003", "g09q21sq004"]
+        assertivite:
+          items: ["g09q21sq005", "g09q21sq006"]
+        competences_cognitives:
+          items: ["g09q21sq007", "g09q21sq008", "g09q21sq009","g09q21sq010"]
+        competences_emotionnelles:
+          items: ["g09q21sq011", "g09q21sq012", "g09q21sq013", "g09q21sq014","g09q21sq015"]
+  twbi:
+    id: "g10"
+    type: "likert_6"
+    response_prefix: "AO0"
+    items:
+      - id: "g10q22sq001"
+        reversed: false
+      - id: "g10q22sq002"
+        reversed: false
+      - id: "g10q22sq003"
+        reversed: false
+      - id: "g10q22sq004"
+        reversed: false
+      - id: "g10q22sq005"
+        reversed: false
+      - id: "g10q22sq006"
+        reversed: false
+      - id: "g10q22sq007"
+        reversed: false
+      - id: "g10q22sq008"
+        reversed: false
+      - id: "g10q22sq009"
+        reversed: false
+      - id: "g10q22sq010"
+        reversed: false
+      - id: "g10q22sq011"
+        reversed: false
+      - id: "g10q22sq012"
+        reversed: false
+      - id: "g10q22sq013"
+        reversed: false
+      - id: "g10q22sq014"
+        reversed: false
+      - id: "g10q22sq015"
+        reversed: false
+      - id: "g10q22sq016"
+        reversed: false
+      - id: "g10q22sq017"
+        reversed: false
+      - id: "g10q22sq018"
+        reversed: false
+      - id: "g10q22sq019"
+        reversed: false
+      - id: "g10q22sq020"
+        reversed: false
+    scoring:
+      total: true
+      subscales:
+        physical_wellbeing:
+          items: ["g10q22sq001", "g10q22sq002", "g10q22sq003", "g10q22sq004"]
+        emotional_psychological_wellbeing:
+          items: ["g10q22sq005", "g10q22sq006", "g10q22sq007", "g10q22sq008"]
+        cognitive_wellbeing:
+          items: ["g10q22sq009", "g10q22sq010", "g10q22sq011", "g10q22sq012"]
+        social_wellbeing:
+          items: ["g10q22sq013", "g10q22sq014", "g10q22sq015", "g10q22sq016"]
+        spiritual_wellbeing:
+          items: ["g10q22sq017", "g10q22sq018", "g10q22sq019", "g10q22sq020"]
+
+validation:
+  required_fields:
+    - "personal_id"
+    - "submitdate"
+  min_responses:
+    tses: 1.0  # Tous les items doivent être complétés
+    tes: 1.0
+    smbm: 1.0
+    cps: 1.0
+    twbi: 1.0
+  value_ranges:
+    tses: [1, 9]
+    tes: [1, 4]
+    smbm: [1, 7]
+    cps: [1, 7]
+    twbi: [1, 6]
+    

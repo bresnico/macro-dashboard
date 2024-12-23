@@ -1,0 +1,586 @@
+---
+title: "Plateforme de suivi du développement professionnel"
+format: dashboard
+server: shiny
+---
+
+
+```{r}
+#| context: setup
+
+library(tidyverse)
+library(plotly)
+library(shiny)
+library(DT)
+library(bslib)
+library(bsicons)
+
+get_latest_survey_data <- function() {
+  files <- list.files("data/processed", 
+                      pattern = "^survey_data_.*\\.csv$",
+                      full.names = TRUE)
+  latest_file <- files[which.max(file.info(files)$mtime)]
+  read_csv(latest_file)
+}
+
+data <- get_latest_survey_data()
+
+get_survey_data_update_date <- function() {
+  files <- list.files("data/processed", 
+                     pattern = "^survey_data_.*\\.csv$",
+                     full.names = TRUE)
+  
+  if (length(files) == 0) {
+    return(NULL)
+  }
+  
+  # Récupérer la date du fichier le plus récent
+  latest_date <- file.info(files)$mtime[which.max(file.info(files)$mtime)]
+  
+  # Formater la date en français
+  formatted_date <- format(latest_date, 
+                         format = "%d/%m/%Y, %H:%M",
+                         tz = "Europe/Paris")
+  
+  return(formatted_date)
+}
+
+```
+
+# Bienvenue
+
+## Row {height=30%}
+
+```{r}
+#| content: "valuebox"
+#| title: "Nombre d'observations complètes saisies"
+
+list(
+icon = "file-earmark-person", 
+color = "red",
+value = data |> 
+  distinct(person_id, timestamp) |> 
+  nrow()
+)
+
+```
+
+```{r}
+#| content: "valuebox"
+#| title: "Nombre de groupes impliqués"
+
+list(
+icon = "house", 
+color = "green",
+value = data |> 
+  distinct(group_id) |> 
+  nrow()
+)
+
+```
+
+```{r}
+#| content: "valuebox"
+#| title: "Version des données"
+
+
+list(
+  icon = "calendar-date",
+  color = "blue",
+  value = get_survey_data_update_date()
+)
+
+```
+
+## Row {height=70%}
+
+```{r}
+#| echo: false
+#| output: asis
+
+scales_list <- data %>%
+  select(scale_label) %>%
+  distinct() %>%
+  pull() %>%
+  sort()
+
+# Créer des cartes en colonnes
+cat("::: {.grid}\n\n")
+
+for(scale in scales_list) {
+  cat(sprintf("::: {.g-col-4}\n::: {.card}\n%s\n:::\n:::\n\n", scale))
+}
+
+cat(":::\n")
+
+```
+
+# Espace profs
+
+## Row {height=30%}
+
+```{r}
+#| title: "identification"
+
+textInput("teacher_id", 
+          "Votre identifiant personnel",
+          placeholder = "Par exemple: 01NS14")
+
+uiOutput("id_status")
+
+```
+
+
+```{r}
+value_box(
+  id = "card1",
+  title = "Nombre de saisies concernées",
+  value = textOutput("Observations")
+)
+```
+
+
+
+```{r}
+value_box(
+  id = "card2",
+  title = "Groupe de référence",
+  value = textOutput("GroupeRef")
+)
+```
+
+
+```{r}
+#| content: "valuebox"
+#| title: "Version des données"
+
+list(
+  color = "white",
+  value = get_survey_data_update_date()
+)
+
+```
+
+## Row {height=70%}
+
+
+### {.toolbar} {width=30%}
+
+
+```{r}
+#| title: "Commandes"
+
+uiOutput("scale_choices")
+
+# UI conditionnelle pour les scores disponibles
+uiOutput("score_choices")
+
+```
+
+### {.tabset}
+
+```{r}
+#| title: "Plot"
+
+plotlyOutput("scale_plot")
+
+```
+
+
+```{r}
+#| title: "Table"
+
+DTOutput("scale_table")
+
+```
+
+
+# Espace direction
+
+## Row {height=30%}
+
+```{r}
+#| title: "identification"
+textInput("group_id", 
+          "Code de l'établissement",
+          placeholder = "Par exemple: un")
+
+uiOutput("group_id_status")
+```
+
+```{r}
+value_box(
+  id = "card3",
+  title = "Nombre d'observations",
+  value = textOutput("GroupObservations")
+)
+```
+
+```{r}
+value_box(
+  id = "card4",
+  title = "Nombre d'utilisateurs",
+  value = textOutput("GroupUsers")
+)
+```
+
+```{r}
+#| content: "valuebox"
+#| title: "Version des données"
+
+list(
+  color = "white",
+  value = get_survey_data_update_date()
+)
+
+```
+
+## Row {height=70%}
+
+### {.toolbar} {width=30%}
+
+```{r}
+#| title: "Commandes de groupe"
+uiOutput("group_scale_choices")
+uiOutput("group_score_choices")
+```
+
+### {.tabset}
+
+```{r}
+#| title: "Plot"
+
+plotlyOutput("group_scale_plot")
+
+```
+
+```{r}
+#| title: "Table"
+
+DTOutput("group_scale_table")
+
+```
+
+# Espace recherche
+
+
+```{r}
+#| context: server
+
+# Espace enseignant----
+
+# Données réactives pour l'id de l'enseignant
+teacher_data <- reactive({
+  req(input$teacher_id)
+  validate(need(nchar(input$teacher_id) > 0, "Veuillez saisir un identifiant"))
+  
+  filtered_data <- data %>%
+    filter(person_id == input$teacher_id)
+  
+  validate(need(nrow(filtered_data) > 0, "Aucune donnée pour cet identifiant"))
+  
+  filtered_data
+})
+
+# UI dynamique pour le choix d'échelle 
+output$scale_choices <- renderUI({
+  req(teacher_data())
+  
+  selectInput(
+    "selected_scale", 
+    "Échelle à visualiser :",
+    choices = unique(teacher_data()$scale_label),
+    selected = NULL
+  )
+})
+
+# UI dynamique pour les choix de scores
+output$score_choices <- renderUI({
+  req(teacher_data(), input$selected_scale)
+  
+  scores <- teacher_data() %>%
+    filter(scale_label == input$selected_scale) %>%
+    pull(score_type_label) %>%
+    unique()
+  
+  checkboxGroupInput(
+    "selected_scores",
+    "Scores à afficher :",
+    choices = scores,
+    selected = scores[1]
+  )
+})
+
+# Enseignant - Plot des données
+output$scale_plot <- renderPlotly({
+  req(teacher_data(), input$selected_scale, input$selected_scores)
+  
+  plot_data <- teacher_data() %>%
+    filter(
+      scale_label == input$selected_scale,
+      score_type_label %in% input$selected_scores
+    )
+  
+  validate(need(nrow(plot_data) > 0, "Aucune donnée à afficher"))
+  
+  p <- plot_data |> 
+    ggplot() +
+    geom_line(
+      aes(x = timestamp, y = score_value, color = score_type_label),
+      linewidth = 1) +
+    geom_point(
+      aes(x = timestamp, y = score_value, color = score_type_label),
+      size = 3) +
+    geom_hline(
+      aes(yintercept = reference_value, color = score_type_label),
+      linetype = "dashed") +
+    labs(
+      x = "Date",
+      y = "Valeur",
+      color = "Score"
+    ) +
+    theme_minimal()
+    
+  ggplotly(p, config = list(
+   displayModeBar = FALSE
+  ))
+})
+# Enseignant - Table des données
+output$scale_table <- renderDT({
+ req(teacher_data(), input$selected_scale, input$selected_scores)
+ 
+ table_data <- teacher_data() %>%
+   filter(
+     scale_label == input$selected_scale,
+     score_type_label %in% input$selected_scores
+   ) %>%
+   select(
+     timestamp,
+     score_type_label,
+     score_value,
+     reference_value, 
+     reference_sd,
+     quartile,
+     n_group
+   )
+ 
+ validate(need(nrow(table_data) > 0, "Aucune donnée à afficher"))
+ 
+ table_data %>%
+   rename(
+     "Date" = timestamp,
+     "Type de score" = score_type_label,
+     "Score personnel" = score_value,
+     "Moyenne du groupe" = reference_value,
+     "Écart-type" = reference_sd,
+     "Quartile" = quartile,
+     "N" = n_group
+   ) %>%
+   arrange(desc(`Date`)) %>%  # Plus récent en premier
+   datatable(
+     options = list(
+       pageLength = 10,
+       dom = 't',
+       ordering = FALSE
+     ),
+     rownames = FALSE
+   ) %>%
+   formatRound(
+     columns = c("Score personnel", "Moyenne du groupe", "Écart-type"),
+     digits = 2
+   ) %>%
+   formatDate(
+     columns = "Date",
+     method = "toLocaleDateString"
+   )
+})
+
+output$Observations <- renderText({
+  teacher_data() |> 
+    distinct(timestamp) |>
+    nrow()
+})
+
+output$GroupeRef <- renderText({
+  teacher_data() |> 
+    pull(group_id) |>
+    unique() |>
+    first()
+})
+
+# espace direction----
+
+# Données réactives pour le groupe
+group_data <- reactive({
+  req(input$group_id)
+  validate(need(nchar(input$group_id) > 0, "Veuillez saisir un code établissement"))
+  
+  filtered_data <- data %>%
+    filter(group_id == input$group_id)
+  
+  validate(need(nrow(filtered_data) > 0, "Aucune donnée pour cet établissement"))
+  
+  filtered_data
+})
+
+# Calcul des moyennes de référence (tous groupes)
+reference_data <- reactive({
+  req(group_data())
+  
+  data %>%
+    group_by(month, scale_label, score_type_label) %>%
+    summarise(
+      reference_value = mean(score_value, na.rm = TRUE),
+      reference_sd = sd(score_value, na.rm = TRUE),
+      n_total = n(),
+      .groups = "drop"
+    )
+})
+
+# UI pour choix d'échelle
+output$group_scale_choices <- renderUI({
+  req(group_data())
+  
+  selectInput(
+    "selected_group_scale", 
+    "Échelle à visualiser :",
+    choices = unique(group_data()$scale_label),
+    selected = NULL
+  )
+})
+
+# UI pour choix de scores
+output$group_score_choices <- renderUI({
+  req(group_data(), input$selected_group_scale)
+  
+  scores <- group_data() %>%
+    filter(scale_label == input$selected_group_scale) %>%
+    pull(score_type_label) %>%
+    unique()
+  
+  checkboxGroupInput(
+    "selected_group_scores",
+    "Scores à afficher :",
+    choices = scores,
+    selected = scores[1]
+  )
+})
+
+# Plot des données de groupe
+output$group_scale_plot <- renderPlotly({
+  req(group_data(), reference_data(), 
+      input$selected_group_scale, input$selected_group_scores)
+  
+  # Moyennes du groupe
+  group_means <- group_data() %>%
+    filter(
+      scale_label == input$selected_group_scale,
+      score_type_label %in% input$selected_group_scores
+    ) %>%
+    group_by(month, scale_label, score_type_label) %>%
+    summarise(
+      group_mean = mean(score_value, na.rm = TRUE),
+      n_group = n(),
+      .groups = "drop"
+    )
+  
+  # Joindre avec les références
+  plot_data <- group_means %>%
+    left_join(reference_data(), 
+              by = c("month", "scale_label", "score_type_label"))
+  
+  validate(need(nrow(plot_data) > 0, "Aucune donnée à afficher"))
+  
+  p <- plot_data %>%
+    ggplot() +
+    # Ligne groupe
+    geom_line(aes(x = month, y = group_mean, 
+                  color = score_type_label)) +
+    geom_point(aes(x = month, y = group_mean, 
+                   color = score_type_label, 
+                   text = sprintf("N=%d", n_group))) +
+    # Ligne référence en pointillé FAIL
+    geom_hline(aes(yintercept = reference_value,
+                  color = score_type_label),
+              linetype = "dashed") +
+    labs(
+      x = "Période",
+      y = "Score moyen",
+      color = "Type de score"
+    ) +
+    theme_minimal()
+    
+  ggplotly(p, tooltip = "text")
+})
+
+# Table des données de groupe
+output$group_scale_table <- renderDT({
+  req(group_data(), reference_data(),
+      input$selected_group_scale, input$selected_group_scores)
+  
+  group_means <- group_data() %>%
+    filter(
+      scale_label == input$selected_group_scale,
+      score_type_label %in% input$selected_group_scores
+    ) %>%
+    group_by(month, scale_label, score_type_label) %>%
+    summarise(
+      group_mean = mean(score_value, na.rm = TRUE),
+      n_group = n(),
+      .groups = "drop"
+    )
+  
+  table_data <- group_means %>%
+    left_join(reference_data(),
+              by = c("month", "scale_label", "score_type_label")) %>%
+    select(
+      month,
+      score_type_label,
+      group_mean,
+      reference_value,
+      reference_sd,
+      n_group,
+      n_total
+    )
+  
+  validate(need(nrow(table_data) > 0, "Aucune donnée à afficher"))
+  
+  table_data %>%
+    rename(
+      "Mois" = month,
+      "Type de score" = score_type_label,
+      "Moyenne du groupe" = group_mean,
+      "Moyenne globale" = reference_value,
+      "Écart-type global" = reference_sd,
+      "N groupe" = n_group,
+      "N total" = n_total
+    ) %>%
+    arrange(desc(`Mois`)) %>%
+    datatable(
+      options = list(
+        pageLength = 10,
+        dom = 't',
+        ordering = FALSE
+      ),
+      rownames = FALSE
+    ) %>%
+    formatRound(
+      columns = c("Moyenne du groupe", "Moyenne globale", "Écart-type global"),
+      digits = 2
+    )
+})
+# Nombre d'observations
+output$GroupObservations <- renderText({
+  group_data() %>% 
+    distinct(timestamp, person_id) %>%  # On ne compte qu'une fois par mois et par personne
+    nrow()
+})
+
+# Nombre d'utilisateurs uniques
+output$GroupUsers <- renderText({
+  group_data() %>%
+    distinct(person_id) %>%
+    nrow()
+})
+
+```
