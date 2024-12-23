@@ -41,9 +41,8 @@ renv/python/
 renv/staging/
 
 # Data files
-data/raw/
+data/processed/
 *.csv
-!data/processed/*.csv  # Keep processed CSV files
 
 # Logs
 logs/*
