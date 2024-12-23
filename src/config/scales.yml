@@ -111,7 +111,7 @@ scales:
           items: ["g06q18sq001", "g06q18sq006", "g06q18sq007", "g06q18sq008"]
   tes:
     id: "g07"
-    label: "TSES on the sky"
+    label: "Teacher emotion scale (TES)"
     type: "likert_4"
     response_prefix: "AO0"
     items:
@@ -143,13 +143,17 @@ scales:
       total: false
       subscales:
         joie:
+          label: "Joie"
           items: ["g07q19sq001", "g07q19sq002", "g07q19sq003", "g07q19sq004"]
         colere:
+          label: "Colère"
           items: ["g07q19sq005", "g07q19sq006", "g07q19sq007", "g07q19sq008"]
         anxiete:
+          label: "Anxiété"
           items: ["g07q19sq009", "g07q19sq010", "g07q19sq011", "g07q19sq012"]
   smbm:
     id: "g08"
+    label: "Subjective Mother Beats Merlin (SMBM)"
     type: "likert_7"
     response_prefix: "AO0"
     items:
@@ -185,13 +189,17 @@ scales:
       total: true
       subscales:
         fatigue_physique:
+          label: "Fatigue physique"
           items: ["g08q20sq001", "g08q20sq002", "g08q20sq003", "g08q20sq004","g08q20sq005","g08q20sq006"]
         lassitude_cognitive:
+          label: "Lassitude cognitive"
           items: ["g08q20sq007", "g08q20sq008", "g08q20sq009", "g08q20sq010","g08q20sq011"]
         epuisement_emotionnel:
+          label: "Epuisement émotionnel"
           items: ["g08q20sq012", "g08q20sq013", "g08q20sq014"]
   cps:
     id: "g09"
+    label: "Compétences psychosociales (CPS)"
     type: "likert_7"
     response_prefix: "AO0"
     items:
@@ -229,15 +237,20 @@ scales:
       total: true
       subscales:
         competences_sociales:
+          label: "Compétences sociales"
           items: ["g09q21sq001", "g09q21sq002", "g09q21sq003", "g09q21sq004"]
         assertivite:
+          label: "Assertivité"
           items: ["g09q21sq005", "g09q21sq006"]
         competences_cognitives:
+          label: "Compétences cognitives"
           items: ["g09q21sq007", "g09q21sq008", "g09q21sq009","g09q21sq010"]
         competences_emotionnelles:
+          label: "Compétences émotionnelles"
           items: ["g09q21sq011", "g09q21sq012", "g09q21sq013", "g09q21sq014","g09q21sq015"]
   twbi:
     id: "g10"
+    label: "Teacher Wellbeing index (TWBI)"
     type: "likert_6"
     response_prefix: "AO0"
     items:
@@ -285,14 +298,19 @@ scales:
       total: true
       subscales:
         physical_wellbeing:
+          label: "Bien-être physique"
           items: ["g10q22sq001", "g10q22sq002", "g10q22sq003", "g10q22sq004"]
         emotional_psychological_wellbeing:
+          label: "Bien-être émotionnel et psychologique"
           items: ["g10q22sq005", "g10q22sq006", "g10q22sq007", "g10q22sq008"]
         cognitive_wellbeing:
+          label: "Bien-être cognitif"
           items: ["g10q22sq009", "g10q22sq010", "g10q22sq011", "g10q22sq012"]
         social_wellbeing:
+          label: "Bien-être social"
           items: ["g10q22sq013", "g10q22sq014", "g10q22sq015", "g10q22sq016"]
         spiritual_wellbeing:
+          label: "Bien-être spirituel"
           items: ["g10q22sq017", "g10q22sq018", "g10q22sq019", "g10q22sq020"]
 
 validation:
