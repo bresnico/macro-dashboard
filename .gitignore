@@ -19,7 +19,7 @@ Thumbs.db
 # Quarto specific
 _site/
 /.quarto/
-*.html
+dashboard.html
 _freeze/
 
 # OneDrive specific
