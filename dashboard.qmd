@@ -39,7 +39,7 @@ get_survey_data_update_date <- function() {
   
   # Formater la date en français
   formatted_date <- format(latest_date, 
-                         format = "%d/%m/%Y, %H:%M",
+                         format = "%H:%M",
                          tz = "Europe/Paris")
   
   return(formatted_date)
@@ -56,7 +56,7 @@ get_survey_data_update_date <- function() {
 #| title: "Nombre d'observations complètes saisies"
 
 list(
-icon = "file-earmark-person", 
+icon = "pencil-fill", 
 color = "red",
 value = data |> 
   distinct(person_id, timestamp) |> 
@@ -81,11 +81,11 @@ value = data |>
 
 ```{r}
 #| content: "valuebox"
-#| title: "Version des données"
+#| title: "Données mise à jour à"
 
 
 list(
-  icon = "calendar-date",
+  icon = "calendar-check",
   color = "blue",
   value = get_survey_data_update_date()
 )
@@ -133,9 +133,10 @@ uiOutput("id_status")
 
 ```{r}
 value_box(
-  id = "card1",
   title = "Nombre de saisies concernées",
-  value = textOutput("Observations")
+  value = textOutput("Observations"),
+  showcase = bs_icon("pencil-fill")
+
 )
 ```
 
@@ -143,20 +144,21 @@ value_box(
 
 ```{r}
 value_box(
-  id = "card2",
   title = "Groupe de référence",
-  value = textOutput("GroupeRef")
+  value = textOutput("GroupeRef"),
+  showcase = bs_icon("house")
 )
 ```
 
 
 ```{r}
 #| content: "valuebox"
-#| title: "Version des données"
+#| title: "Données mise à jour à"
 
 list(
   color = "white",
-  value = get_survey_data_update_date()
+  value = get_survey_data_update_date(),
+  icon = "calendar-check"
 )
 
 ```
@@ -210,27 +212,30 @@ uiOutput("group_id_status")
 
 ```{r}
 value_box(
-  id = "card3",
   title = "Nombre d'observations",
-  value = textOutput("GroupObservations")
+  value = textOutput("GroupObservations"),
+  showcase = bs_icon("pencil-fill")
+
 )
 ```
 
 ```{r}
 value_box(
-  id = "card4",
   title = "Nombre d'utilisateurs",
-  value = textOutput("GroupUsers")
+  value = textOutput("GroupUsers"),
+  showcase = bs_icon("people-fill")
+
 )
 ```
 
 ```{r}
 #| content: "valuebox"
-#| title: "Version des données"
+#| title: "Données mise à jour à"
 
 list(
   color = "white",
-  value = get_survey_data_update_date()
+  value = get_survey_data_update_date(),
+  icon = "calendar-check"
 )
 
 ```
