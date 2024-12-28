@@ -53,7 +53,12 @@ process_single_scale <- function(data, scale_name, config, debug = TRUE) {
     scores_data <- scores_data %>%
       rowwise() %>%
       mutate(
-        total_score = mean(c_across(all_of(item_ids)), na.rm = TRUE)
+        # Si toutes les valeurs de l'échelle sont NA, retourne -99, sinon calcule la moyenne
+        total_score = if(all(is.na(c_across(all_of(item_ids))))) {
+          -99
+        } else {
+          mean(c_across(all_of(item_ids)), na.rm = TRUE)
+        }
       ) %>%
       ungroup()
   }
@@ -64,7 +69,11 @@ process_single_scale <- function(data, scale_name, config, debug = TRUE) {
       scores_data <- scores_data %>%
         rowwise() %>%
         mutate(
-          !!subscale_name := mean(c_across(all_of(subscale_items)), na.rm = TRUE)
+          !!subscale_name := if(all(is.na(c_across(all_of(subscale_items))))) {
+            -99
+          } else {
+            mean(c_across(all_of(subscale_items)), na.rm = TRUE)
+          }
         ) %>%
         ungroup()
     }
