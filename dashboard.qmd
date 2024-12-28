@@ -20,7 +20,7 @@ get_latest_survey_data <- function() {
                       pattern = "^survey_data_.*\\.csv$",
                       full.names = TRUE)
   latest_file <- files[which.max(file.info(files)$mtime)]
-  read_csv(latest_file)
+  read_csv(latest_file, locale = locale(encoding = "UTF-8"))
 }
 
 data <- get_latest_survey_data()
@@ -112,7 +112,6 @@ for(scale in scales_list) {
 }
 
 cat(":::\n")
-
 ```
 
 # Espace profs
@@ -124,7 +123,7 @@ cat(":::\n")
 
 textInput("teacher_id", 
           "Votre identifiant personnel",
-          placeholder = "Par exemple: 01NS14")
+          placeholder = "Par exemple: 01NS14-artichaut")
 
 uiOutput("id_status")
 
@@ -274,15 +273,26 @@ DTOutput("group_scale_table")
 
 # Espace enseignant----
 
-# Données réactives pour l'id de l'enseignant
+# Données réactives pour l'id de l'enseignant (même person_id dans le bon group_id)
 teacher_data <- reactive({
   req(input$teacher_id)
   validate(need(nchar(input$teacher_id) > 0, "Veuillez saisir un identifiant"))
   
-  filtered_data <- data %>%
-    filter(person_id == input$teacher_id)
+  # D'abord trouver le matching avec l'ID sécurisé pour obtenir person_id et group_id
+  secure_match <- data %>%
+    filter(person_id_secure == input$teacher_id) %>%
+    distinct(person_id, group_id) %>%
+    head(1)  # On prend le premier match si plusieurs
   
-  validate(need(nrow(filtered_data) > 0, "Aucune donnée pour cet identifiant"))
+  validate(need(nrow(secure_match) > 0, 
+               "Identifiant non reconnu. Vérifiez votre saisie (exemple: 01NS14-banane)"))
+  
+  # Ensuite filtrer toutes les données correspondant à ce person_id dans ce group_id
+  filtered_data <- data %>%
+    filter(
+      person_id == secure_match$person_id,
+      group_id == secure_match$group_id
+    )
   
   filtered_data
 })

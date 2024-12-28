@@ -1,3 +1,14 @@
+# Préparation de l'identifiant utilisateur sans le mot de sécurité (fonction rétrocompatible)
+
+clean_teacher_id <- function(full_id) {
+  # Vectorisation avec ifelse pour gérer les vecteurs
+  ifelse(
+    grepl("-", full_id),
+    sub("^(.+?)-.*$", "\\1", full_id),
+    full_id
+  )
+}
+
 prepare_numeric_responses <- function(data, scale_name, config) {
   scale_config <- config$scales[[scale_name]]
   item_ids <- sapply(scale_config$items, function(x) x$id)
@@ -29,12 +40,13 @@ process_single_scale <- function(data, scale_name, config, debug = TRUE) {
   # Préparation initiale des données avec calcul des scores
   scores_data <- data %>%
     mutate(
-      person_id = g01q13,
+      person_id = clean_teacher_id(g01q13),   # ID nettoyé pour les agrégations 
+      person_id_secure = g01q13,              # ID complet pour l'interface      
       group_id = groupecode,
       timestamp = ymd_hms(datestamp),
       month = floor_date(timestamp, "month")
     ) %>%
-    select(timestamp, month, person_id, group_id, all_of(item_ids))
+    select(timestamp, month, person_id, person_id_secure, group_id, all_of(item_ids))
   
   # Calcul des scores individuels
   if(scale_config$scoring$total) {
@@ -60,11 +72,11 @@ process_single_scale <- function(data, scale_name, config, debug = TRUE) {
   
   # Identification des colonnes de scores
   score_columns <- setdiff(names(scores_data), 
-                           c("timestamp", "month", "person_id", "group_id", item_ids))
+                           c("timestamp", "month", "person_id", "person_id_secure", "group_id", item_ids))
   
   # Préparation du format long avec scores de référence
   scores_long <- scores_data %>%
-    select(timestamp, month, person_id, group_id, all_of(score_columns)) %>%
+    select(timestamp, month, person_id, person_id_secure, group_id, all_of(score_columns)) %>%
     pivot_longer(
       cols = all_of(score_columns),
       names_to = "score_type",
@@ -137,6 +149,7 @@ prepare_all_scales_scores <- function(data, config, debug = FALSE) {
       timestamp,
       month,
       person_id,
+      person_id_secure,
       group_id,
       scale,
       scale_label,
@@ -144,7 +157,7 @@ prepare_all_scales_scores <- function(data, config, debug = FALSE) {
       score_type_label,
       score_value,
       reference_value,
-      reference_sd,    # Nouvelle colonne
+      reference_sd,
       quartile,
       n_group
     )
