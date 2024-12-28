@@ -16,7 +16,7 @@ library(bslib)
 library(bsicons)
 
 get_latest_survey_data <- function() {
-  files <- list.files("data/processed", 
+  files <- list.files("data/processed",
                       pattern = "^survey_data_.*\\.csv$",
                       full.names = TRUE)
   latest_file <- files[which.max(file.info(files)$mtime)]
@@ -291,7 +291,8 @@ teacher_data <- reactive({
   filtered_data <- data %>%
     filter(
       person_id == secure_match$person_id,
-      group_id == secure_match$group_id
+      group_id == secure_match$group_id,
+      score_value != -99
     )
   
   filtered_data
