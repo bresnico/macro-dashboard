@@ -6,9 +6,8 @@ library(glue)
 
 # Chargement config
 config <- yaml::read_yaml("src/config/scales.yml")
-
-# ID
-survey_id <- "637555"
+credentials <- yaml::read_yaml("src/config/credentials.yml")
+survey_id <- credentials$limesurvey$survey_id
 
 # Préparation du log
 log_info <- function(msg) {
