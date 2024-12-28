@@ -20,10 +20,12 @@ setup_limesurvey_connection <- function() {
     if (!is.null(session_key)) {
       release_session_key()
       return(TRUE)
+      return(survey_id)
     }
     return(FALSE)
   }, error = function(e) {
     warning("Erreur de configuration LimeSurvey: ", e$message)
     return(FALSE)
   })
+  
 }
