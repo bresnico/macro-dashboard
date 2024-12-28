@@ -1,366 +1,243 @@
-# Plateforme d'évaluation du développement professionnel
+# Plateforme de Suivi du Développement Professionnel
 
 ## Vue d'ensemble
 
-Cette plateforme est un outil de récolte et d'analyse de données pour les établissements scolaires, permettant un monitorage en temps réel du développement professionnel à travers différentes échelles d'évaluation.
+Cette plateforme est un outil de monitorage en temps réel du développement professionnel des enseignants, basé sur des échelles d'évaluation scientifiquement validées. Le système utilise Quarto et Shiny pour créer un dashboard interactif permettant différentes vues selon le profil utilisateur.
 
 ### Objectifs principaux
-- Fournir aux directions d'établissement un tableau de bord interactif pour le pilotage
-- Permettre la récolte standardisée de données via des questionnaires validés scientifiquement
-- Offrir différentes vues des données selon le profil utilisateur (enseignant, directeur, chercheur)
+- Permettre aux enseignants de suivre leur développement professionnel
+- Fournir aux directions un tableau de bord pour le pilotage d'établissement
+- Offrir aux chercheurs un accès aux données pour des analyses approfondies
 
-### Architecture globale
-La plateforme s'articule autour de trois composants principaux :
-1. Un backend LimeSurvey pour la récolte des données
-2. Un système de traitement R pour l'analyse et le scoring
-3. Une interface Shiny hébergée sur un serveur virtuel Ubuntu pour la visualisation des données
+### Architecture technique
 
-Le système est conçu pour être extensible, avec une architecture basée sur des fichiers de configuration YAML qui permettent l'ajout simple de nouvelles échelles d'évaluation et la gestion sécurisée des credentials.
+Le système s'articule autour de trois composants :
+1. Une API LimeSurvey pour la collecte des données
+2. Un pipeline R pour le traitement et l'analyse
+3. Un dashboard Quarto avec des composants Shiny pour la visualisation
 
-## Installation et Configuration
+L'architecture est basée sur des fichiers de configuration YAML qui définissent :
+- Les credentials d'accès (credentials.yml)
+- La structure des échelles d'évaluation (scales.yml)
 
-### Prérequis
+## Prérequis
+
+### Logiciels
 - R (>= 4.2.0)
-- RStudio (recommandé pour le développement)
+- RStudio (>= 2023.12.0)
+- Quarto (>= 1.4.0)
 - Instance LimeSurvey active
-- Packages R requis :
-  - shiny
-  - bslib
-  - tidyverse
-  - lubridate
-  - yaml
-  - limer
 
-### Configuration des credentials
-
-1. Dans le dossier `config/`, copiez le template des credentials :
-```bash
-cp credentials.yml.template credentials.yml
+### Packages R requis
+```r
+install.packages(c(
+  "tidyverse",  # Traitement des données
+  "shiny",      # Composants interactifs
+  "bslib",      # Theming Bootstrap
+  "bsicons",    # Icônes Bootstrap
+  "plotly",     # Graphiques interactifs
+  "DT",         # Tables interactives
+  "yaml",       # Lecture des configurations
+  "limer"       # API LimeSurvey
+  "glue"        # Traitement des données
+))
 ```
 
-2. Modifiez `credentials.yml` avec vos informations de connexion :
-```yaml
-limesurvey:
-  api_url: 'URL_DE_VOTRE_LIMESURVEY'
-  username: 'VOTRE_USERNAME'
-  password: 'VOTRE_PASSWORD'
+## Structure du projet
 
-researcher_codes:
-  - 'CODE_CHERCHEUR_1'
-  - 'CODE_CHERCHEUR_2'
-```
-
-**Important** : Ne committez jamais le fichier `credentials.yml` - il est déjà inclus dans le `.gitignore`.
-
-### Gestion des dépendances avec {renv}
-
-Ce projet utilise {renv} pour gérer les dépendances R. {renv} crée un environnement isolé pour le projet, garantissant la reproductibilité des analyses.
-
-1. Installation initiale :
-```R
-install.packages("renv")
-renv::restore()
-```
-
-2. Ajout d'un nouveau package :
-```R
-renv::install("nom_du_package")
-```
-
-3. Mise à jour du fichier de verrouillage :
-```R
-renv::snapshot()
-```
-
-### Structure du projet
 ```
 .
-├── R/
-│   ├── core/                    # Fonctions fondamentales de traitement
-│   │   ├── analysis.R          # Analyses statistiques
-│   │   ├── config.R            # Configuration et connexion
-│   │   └── data_processing.R   # Import et traitement des données
-│   ├── dashboard/              # Interface et logique métier
-│   │   ├── functions.R         # Préparation des données par profil
-│   │   ├── server/            # Logique serveur par profil
-│   │   └── ui/               # Interfaces utilisateur par profil
-│   └── functions.R            # Point d'entrée des fonctions
-├── app.R                      # Application Shiny principale
-├── global.R                   # Configuration globale et chargement
-└── config/
-    ├── credentials.yml        # Identifiants (non versionné)
-    └── scales_definition.yml  # Configuration des échelles
+├── dashboard_files/      # Fichiers générés par Quarto
+├── src/
+│   ├── config/          
+│   │   ├── credentials.yml    # Configuration API (non versionné)
+│   │   └── scales.yml        # Définition des échelles
+│   └── lib/            
+│       ├── connection.R      # Connexion LimeSurvey
+│       ├── import.R         # Import des données
+│       ├── scales.R        # Traitement des échelles
+│       └── main.R         # Pipeline principal
+├── data/
+│   └── processed/       # Données traitées
+├── logs/                # Logs système
+├── dashboard.qmd        # Dashboard Quarto principal
+└── README.md
 ```
 
-### Configuration des échelles
+## Configuration
 
-Le fichier `config/scales_definition.yml` définit la structure des échelles et leur scoring. Pour ajouter une nouvelle échelle :
+### Credentials
 
-1. **Définition dans LimeSurvey**
-   - Créez les questions
-   - Notez les identifiants
+1. Copier le template :
+```bash
+cp src/config/credentials.yml.template src/config/credentials.yml
+```
 
-2. **Configuration YAML**
+2. Remplir avec vos accès :
 ```yaml
-scales:
-  votre_echelle:
-    id: "group_id"
-    type: "likert_5"
-    response_prefix: "AO0"
-    items:
-      - id: "question_id_1"
-        reversed: false
+limesurvey:
+  api_url: 'URL_API_LIMESURVEY'
+  username: 'USERNAME'
+  password: 'PASSWORD'
+  survey_id: 'SURVEY_ID'
+
+researcher_codes:
+  - 'CODE1'
+  - 'CODE2'
 ```
 
-3. **Validation**
-   - Vérifiez le format YAML
-   - Testez avec les données de test
-   - Validez le scoring
+### Échelles d'évaluation
 
-### Vérification de l'installation
+Le système gère actuellement 5 échelles standardisées :
 
-Lancez les tests pour vérifier la configuration :
-```R
-source("tests/tests.R")
+1. **TSES (Teacher Self-Efficacy Scale)**
+   - Score total et 3 sous-échelles
+   - Échelle Likert 9 points
+
+2. **TES (Teacher Emotion Scale)**
+   - 3 sous-échelles : joie, colère, anxiété
+   - Échelle Likert 4 points
+
+3. **SMBM (Shirom-Melamed Burnout Measure)**
+   - Score total et 3 sous-échelles
+   - Échelle Likert 7 points
+
+4. **CPS (Compétences Psychosociales)**
+   - Score total et 4 sous-échelles
+   - Échelle Likert 7 points
+
+5. **TWBI (Teacher Wellbeing Index)**
+   - Score total et 5 sous-échelles
+   - Échelle Likert 6 points
+
+## Pipeline de traitement
+
+### Import/Préparation des données
+
+```mermaid
+flowchart TD
+    A[LimeSurvey API] -->|connection.R| B[Import brut]
+    B -->|import.R| C[Standardisation]
+    C -->|scales.R| D[Calcul des scores]
+    D -->|main.R| E[Export CSV]
+    E --> F[Dashboard Quarto]
 ```
 
-## Utilisation
+Le pipeline est exécuté via src/lib/main.R qui :
+1. Configure la connexion API
+2. Importe et standardise les données
+3. Calcule les scores par échelle
+4. Exporte les résultats datés
 
-### Lancement de l'application
-```R
-shiny::runApp()
+### Détails du process
+
+```mermaid
+
+flowchart TD
+    subgraph "connection.R"
+        A[setup_limesurvey_connection]
+    end
+
+    subgraph "import.R"
+        B[get_limesurvey_data]
+        C[standardize_limesurvey_names]
+    end
+
+    subgraph "scales.R"
+        D[prepare_numeric_responses]
+        E[process_single_scale]
+        F[prepare_all_scales_scores]
+        G[prepare_response_mapping]
+    end
+
+    subgraph "main.R"
+        H[main function]
+        I[log_info]
+    end
+
+    %% Connexions du workflow
+    H -->|"1. Start"| I
+    I -->|"Log start"| A
+    A -->|"Success"| B
+    B -->|"Raw data"| C
+    C -->|"Standardized data"| F
+    
+    %% Sous-processus de prepare_all_scales_scores
+    F -->|"For each scale"| D
+    D -->|"Numeric data"| E
+    E -->|"Scale scores"| F
+    
+    %% Finalization
+    F -->|"Final scores"| H
+    H -->|"Log & Save"| I
+
+    %% Styling
+    classDef processNode fill:#f9f,stroke:#333,stroke-width:2px
+    classDef dataNode fill:#bbf,stroke:#333,stroke-width:2px
+    classDef logNode fill:#bfb,stroke:#333,stroke-width:2px
+    
+    class A,B,C,D,E,F processNode
+    class G,H dataNode
+    class I logNode
+```
+
+### Mise à jour des données
+
+Les données sont mises à jour automatiquement 3 fois par jour via cronjob sur le serveur qui accueille l'application. L'heure de dernière mise à jour est affichée dans l'interface du dashboard.
+
+## Dashboard Quarto
+
+### Lancement
+
+```bash
+quarto render dashboard.qmd
 ```
 
 ### Profils utilisateurs
 
-#### Enseignants
-- Visualisation des scores individuels
-- Comparaison avec les moyennes du groupe
-- Suivi temporel
+#### Espace profs
+- Visualisation des scores personnels
+- Comparaison avec moyennes de groupe
+- Sélection des échelles et sous-scores
 
-#### Directeurs
+#### Espace direction
 - Vue d'ensemble de l'établissement
-- Tableaux de bord agrégés
-- Comparaison avec les indices globaux
+- Statistiques agrégées par groupe
+- Évolution temporelle des scores
 
-#### Chercheurs
-- Accès aux données anonymisées
-- Analyses statistiques avancées
-- Filtrage démographique
+#### Espace recherche
+- En développement
+- Accès prévu aux données anonymisées
+- Filtres démographiques
+
+### Paramètres de visualisation
+
+Chaque vue propose :
+- Sélection des échelles
+- Choix des sous-scores
+- Affichage graphique ou tabulaire
+- Périodes temporelles
 
 ## Développement
 
 ### Bonnes pratiques
-- Documentez toute nouvelle échelle
-- Testez avec les données de test
-- Ne committez jamais de credentials
-- Utilisez les branches pour les nouvelles fonctionnalités
+- Documenter les modifications d'échelles dans scales.yml
+- Tester avec un jeu de données réduit
+- Ne pas versionner credentials.yml
+- Loguer les erreurs dans /logs
 
-### Pipeline de traitement
+### Extensions futures
+- Ajout de nouvelles échelles
+- Analyses démographiques 
+- Export de rapports PDF
+- Tableaux de bord personnalisés
 
-```mermaid
-flowchart TD
-    LS[LimeSurvey] --> |get_limesurvey_data| RAW[Données brutes]
-    RAW --> |standardize_limesurvey_names| STD[Données standardisées]
-    STD --> |convert_responses| CONV[Données converties]
-    
-    subgraph Calcul des scores
-        CONV --> |calculate_scale_scores| SCORES[Scores par échelle]
-        SCORES --> GRP[Statistiques groupe]
-        SCORES --> TEMP[Tendances temporelles]
-    end
-    
-    subgraph Préparation par profil
-        SCORES --> |prepare_teacher_data| TEACH[Vue Enseignant]
-        GRP & TEMP --> |prepare_director_data| DIR[Vue Directeur]
-        SCORES --> |prepare_researcher_data| RES[Vue Chercheur]
-        
-        subgraph Vue Enseignant
-            TEACH --> INDIV[Scores individuels]
-            TEACH --> COMP[Comparaisons groupe]
-            TEACH --> META[Métadonnées]
-        end
-        
-        subgraph Vue Directeur
-            DIR --> STATS[Statistiques établissement]
-            DIR --> EVOL[Évolution temporelle]
-            DIR --> COMP_GRP[Comparaisons inter-groupes]
-        end
-        
-        subgraph Vue Chercheur
-            RES --> VIA[Score via]
-            RES --> |À implémenter| DEMO[Analyses démographiques]
-        end
-    end
-```
+## Support
 
-### Initialisation et configuration
-
-Le système s'initialise via global.R qui assure trois fonctions essentielles :
-1. Chargement des packages nécessaires (shiny, bslib, tidyverse, lubridate, yaml, limer)
-2. Lecture de la configuration des échelles depuis scales_definition.yml
-3. Chargement de toutes les fonctions via R/functions.R
-
-### Flux de traitement des données
-
-Notre pipeline de traitement des données suit une architecture en couches, avec des transformations successives des données brutes jusqu'aux visualisations spécifiques par profil.
-
-#### 1. Connexion et import (R/core/config.R)
-
-La fonction `setup_limesurvey_connection()` initialise la connexion à LimeSurvey en :
-- Chargeant les credentials depuis le fichier YAML
-- Configurant les options de connexion à l'API
-- Testant la connexion via `get_session_key()`
-
-#### 2. Traitement des données (R/core/data_processing.R)
-
-Le traitement s'effectue en plusieurs étapes :
-
-**Import des données**
-`get_limesurvey_data(survey_id, config)` :
-- Récupère les réponses brutes via l'API LimeSurvey
-- Gère l'encodage des caractères
-- Effectue une première validation des données
-
-**Standardisation**
-`standardize_limesurvey_names(data, config)` :
-- Nettoie les noms de colonnes
-- Supprime les points dans les noms
-- Convertit en minuscules
-- Gère les codes de groupe manquants
-
-**Conversion des réponses**
-`convert_responses(data, config)` :
-- Convertit les réponses codées en valeurs numériques
-- Traite les données démographiques
-- Applique les configurations spécifiques à chaque échelle
-
-**Calcul des scores**
-`calculate_scale_scores(data, scale_name, config)` :
-- Valide la présence des items requis
-- Gère les valeurs manquantes
-- Calcule les scores totaux et sous-scores selon la configuration
-- Vérifie les taux de réponse minimums
-
-#### 3. Analyses statistiques (R/core/analysis.R)
-
-Trois types d'analyses sont disponibles :
-
-`analyze_group_scores(scores)` :
-- Calcule les statistiques descriptives par groupe
-- Fournit n, moyenne, écart-type, min, max pour chaque variable numérique
-
-`analyze_temporal_trend(scores, period)` :
-- Analyse l'évolution temporelle des scores
-- Agrège les données par période spécifiée
-- Calcule les statistiques temporelles
-
-`identify_repeated_measures(scores)` :
-- Identifie les mesures répétées par individu
-- Calcule les intervalles entre mesures
-- Fournit des métriques de suivi longitudinal
-
-#### 4. Préparation des vues (R/dashboard/functions.R)
-
-Les données sont ensuite adaptées pour chaque profil utilisateur :
-
-**Vue Enseignant** (`prepare_teacher_data()`)
-- Entrée : données converties, ID personnel, configuration
-- Validation de l'ID et récupération des données individuelles
-- Calcul des scores personnels via `calculate_scale_scores()`
-- Ajout des moyennes de groupe pour comparaison
-- Sortie : scores individuels, comparatifs et métadonnées
-
-**Vue Directeur** (`prepare_director_data()`)
-- Entrée : données converties, code groupe, configuration
-- Validation du code groupe
-- Calcul des statistiques globales et par groupe
-- Analyse des tendances temporelles
-- Sortie : vue d'ensemble de l'établissement avec comparaisons
-
-**Vue Chercheur** (`prepare_researcher_data()`)
-- Entrée : données converties, configuration, filtres démographiques
-- Application des filtres démographiques
-- Calcul des scores agrégés
-- Sortie : données de recherche anonymisées
-Note : Cette vue est en développement.
-
-### Interface utilisateur
-
-Pour chaque profil, une interface spécifique (R/dashboard/ui/) gère l'affichage des données, tandis que la logique associée (R/dashboard/server/) gère les interactions et les mises à jour dynamiques.
-
-#### Configuration globale (global.R)
-
-global.R établit l'environnement de base de l'application. Il initialise les éléments fondamentaux nécessaires au fonctionnement de l'interface :
-
-- Chargement des packages essentiels (shiny, bslib, tidyverse, lubridate, yaml, limer)
-- Lecture de la configuration des échelles depuis scales_definition.yml
-- Import des fonctions via functions.R qui agrège l'ensemble des fichiers de fonctions du projet
-
-Cette configuration globale est chargée une seule fois au démarrage de l'application et reste disponible pour tous les composants.
-
-#### Point d'entrée (app.R)
-
-app.R orchestre l'ensemble de l'application. Il définit deux éléments majeurs :
-
-La fonction ui principale qui :
-- Établit le thème visuel via bslib
-- Crée l'en-tête de l'application
-- Met en place un système de navigation latérale avec sélection du profil utilisateur
-- Gère l'affichage conditionnel des interfaces spécifiques à chaque profil
-
-La fonction server qui :
-- Maintient l'état global de l'application via reactiveValues
-- Gère la validation des identifiants utilisateur
-- Coordonne le chargement et la préparation des données
-- Dispatche vers les modules serveur appropriés selon le profil
-
-#### Interfaces spécifiques (R/dashboard/ui/)
-
-Chaque profil utilisateur dispose de son interface dédiée :
-
-teacher_ui.R crée une interface focalisée sur :
-- La sélection des échelles d'évaluation
-- L'affichage des scores personnels
-- La visualisation des comparaisons avec le groupe
-
-director_ui.R propose une interface orientée pilotage avec :
-- La sélection des échelles et des scores à analyser
-- L'affichage des statistiques d'établissement
-- La visualisation des évolutions temporelles
-
-researcher_ui.R fournit une interface analytique permettant :
-- Le filtrage des données selon des critères démographiques
-- La visualisation des données agrégées
-- L'accès aux analyses statistiques
-
-#### Logique métier (R/dashboard/server/)
-
-Les fichiers server correspondants implémentent la logique spécifique à chaque profil :
-
-teacher_server.R gère :
-- La préparation des données personnelles via prepare_teacher_data()
-- La mise à jour réactive des visualisations
-- Les calculs de comparaison avec le groupe
-
-director_server.R s'occupe de :
-- L'agrégation des données d'établissement via prepare_director_data()
-- La génération des statistiques de groupe
-- La création des graphiques d'évolution
-
-researcher_server.R prend en charge :
-- Le traitement des filtres démographiques
-- La préparation des données de recherche via prepare_researcher_data()
-- La génération des visualisations statistiques
-
-Cette architecture modulaire permet un découpage clair des responsabilités tout en maintenant un flux de données cohérent, de l'import initial jusqu'à la visualisation finale. Le système reste extensible, permettant l'ajout de nouveaux profils ou fonctionnalités sans perturber l'existant.
-
-## Contact et Support
-
-Pour toute question ou problème :
-- Consultez la documentation dans le readme.md
-- Soumettez une issue sur GitHub
-- Contactez l'équipe de développement
+Pour toute question technique :
+1. Consulter les logs dans /logs/process.log
+2. Vérifier la configuration dans /src/config
+3. Contacter l'équipe de développement
 
 ## Licence
 
