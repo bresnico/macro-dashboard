@@ -3,12 +3,11 @@ library(tidyverse)
 library(limer)
 
 # fonction pour charger les données LimeSurvey
-setup_limesurvey_connection <- function() {
+setup_limesurvey_connection <- function(credentials) {
   # Chargement des credentials
   tryCatch({
-    credentials <- yaml::read_yaml("src/config/credentials.yml")
-    
-    # Configuration avec les credentials chargés
+
+    # Configuration avec les credentials reçus
     options(
       lime_api = credentials$limesurvey$api_url,
       lime_username = credentials$limesurvey$username,
@@ -20,7 +19,6 @@ setup_limesurvey_connection <- function() {
     if (!is.null(session_key)) {
       release_session_key()
       return(TRUE)
-      return(survey_id)
     }
     return(FALSE)
   }, error = function(e) {

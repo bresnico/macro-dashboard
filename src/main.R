@@ -21,12 +21,12 @@ log_info <- function(msg) {
 }
 
 # Pipeline principal
-main <- function(survey_id) {
+main <- function(survey_id, credentials) {
   log_info("\nDémarrage du traitement")
   
   # 1. Connection
   log_info("\nTentative de connexion à LimeSurvey")
-  if(!setup_limesurvey_connection()) {
+  if(!setup_limesurvey_connection(credentials)) {
     log_info("\nERREUR: Échec de connexion LimeSurvey")
     stop("\nErreur de connexion LimeSurvey")
   }
@@ -61,4 +61,4 @@ main <- function(survey_id) {
   log_info("\nTraitement terminé avec succès")
 }
 
-main(survey_id)
+main(survey_id, credentials)
