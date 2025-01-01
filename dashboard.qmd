@@ -337,30 +337,46 @@ output$scale_plot <- renderPlotly({
       score_type_label %in% input$selected_scores
     )
   
+  reference_segments <- plot_data %>% 
+    group_by(month, score_type_label) %>%
+    summarise(
+      reference_value = first(reference_value),
+      start = floor_date(min(timestamp), "month"),
+      end = ceiling_date(min(timestamp), "month") - days(1),
+      .groups = "drop"
+    )
+  
   validate(need(nrow(plot_data) > 0, "Aucune donnée à afficher"))
   
-  p <- plot_data |> 
-    ggplot() +
+  p <- ggplot() +
+    geom_segment(
+      data = reference_segments,
+      aes(x = start, xend = end,
+          y = reference_value, yend = reference_value,
+          color = score_type_label),
+      linewidth = 1
+    ) +
     geom_line(
+      data = plot_data,
       aes(x = timestamp, y = score_value, color = score_type_label),
-      linewidth = 1) +
+      linewidth = 1
+    ) +
     geom_point(
+      data = plot_data,
       aes(x = timestamp, y = score_value, color = score_type_label),
-      size = 3) +
-    geom_hline(
-      aes(yintercept = reference_value, color = score_type_label),
-      linetype = "dashed") +
+      size = 3
+    ) +
     labs(
       x = "Date",
       y = "Valeur",
       color = "Score"
     ) +
+    scale_x_date(date_labels = "%B", date_breaks = "1 month") +
     theme_minimal()
-    
-  ggplotly(p, config = list(
-   displayModeBar = FALSE
-  ))
+  
+  ggplotly(p, config = list(displayModeBar = FALSE))
 })
+
 # Enseignant - Table des données
 output$scale_table <- renderDT({
  req(teacher_data(), input$selected_scale, input$selected_scores)
