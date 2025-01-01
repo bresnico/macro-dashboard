@@ -34,3 +34,10 @@ tryCatch({
   # Si on arrive ici, c'est qu'il y a eu une erreur
   send_notification(FALSE)
 })
+
+if (Sys.info()["sysname"] == "Linux") {
+  message("Environnement Linux détecté - Redémarrage du serveur shiny")
+  system("sudo systemctl restart shiny-server")
+} else {
+  message("Environnement non-Linux détecté - Pas de redémarrage du serveur")
+}
