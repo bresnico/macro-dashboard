@@ -270,7 +270,58 @@ DTOutput("group_scale_table")
 
 # Espace recherche
 
-A venir !
+## {.toolbar}
+
+```{r}
+selectInput("demo_age", "Âge", 
+ choices = c("Tous", unique(data$age)),
+ selected = "Tous"
+)
+```
+
+```{r}
+selectInput("demo_gender", "Genre",
+ choices = c("Tous", unique(data$gender)), 
+ selected = "Tous"
+)
+```
+
+```{r}
+selectInput("demo_status", "Statut",
+ choices = c("Tous", unique(data$status)),
+ selected = "Tous"
+)
+```
+
+```{r}
+selectInput("demo_exp", "Expérience",
+ choices = c("Tous", unique(data$experience)),
+ selected = "Tous"
+)
+```
+
+```{r}
+uiOutput("research_scale_choices")
+```
+
+```{r}
+uiOutput("research_score_choices")
+```
+
+## Row {height=70%}
+
+### {.tabset} 
+
+#### Plots
+```{r}
+plotlyOutput("research_plot")
+```
+
+#### Table
+
+```{r}
+DTOutput("research_table")
+```
 
 ```{r}
 #| context: server
@@ -630,6 +681,55 @@ output$GroupUsers <- renderText({
   group_data() %>%
     distinct(person_id) %>%
     nrow()
+})
+
+# Espace recherche----
+
+filtered_research_data <- reactive({
+ data %>%
+   filter(
+     if(input$demo_age != "Tous") age == input$demo_age else TRUE,
+     if(input$demo_gender != "Tous") gender == input$demo_gender else TRUE,  
+     if(input$demo_status != "Tous") status == input$demo_status else TRUE,
+     if(input$demo_exp != "Tous") experience == input$demo_exp else TRUE
+   )
+})
+
+output$research_plot <- renderPlotly({
+ req(filtered_research_data(), input$research_scale, input$research_scores)
+ 
+ plot_data <- filtered_research_data() %>%
+   filter(
+     scale_label == input$research_scale,
+     score_type_label %in% input$research_scores
+   )
+ 
+ p <- ggplot(plot_data) +
+   geom_boxplot(aes(x = month, y = score_value, fill = score_type_label)) +
+   labs(x = "Période", y = "Score", fill = "Type de score") +
+   theme_minimal() +
+   coord_flip()
+ 
+ ggplotly(p)
+})
+
+output$research_table <- renderDT({
+ req(filtered_research_data(), input$research_scale, input$research_scores)
+ 
+ filtered_research_data() %>%
+   filter(
+     scale_label == input$research_scale,
+     score_type_label %in% input$research_scores
+   ) %>%
+   group_by(month, score_type_label) %>%
+   summarise(
+     N = n(),
+     Moyenne = mean(score_value, na.rm = TRUE),
+     "Écart-type" = sd(score_value, na.rm = TRUE),
+     Min = min(score_value, na.rm = TRUE),
+     Max = max(score_value, na.rm = TRUE)
+   ) %>%
+   arrange(desc(month))
 })
 
 ```
