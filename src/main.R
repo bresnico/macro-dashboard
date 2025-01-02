@@ -1,6 +1,7 @@
 source("src/lib/connection.R")
 source("src/lib/import.R")
 source("src/lib/scales.R")
+source("src/lib/demographics.R")
 
 library(glue)
 
@@ -72,13 +73,30 @@ main <- function(survey_id, credentials) {
     std_data <- standardize_limesurvey_names(raw_data, config)
     log_info("\nStandardisation terminée")
     
-    # 3. Traitement des échelles
+    # 3. Traitement des échelles et des données démographiques en parallèle
     log_info("\nCalcul des scores")
-    processed_data <- prepare_all_scales_scores(std_data, config)
-    n_rows <- nrow(processed_data)
+    scales_data <- prepare_all_scales_scores(std_data, config)
+    n_rows <- nrow(scales_data)
     log_info(glue("\nCalcul terminé: {n_rows} lignes"))
+    log_info("\nPréparation des données démographiques")
+    demographics_data <- process_demographics(std_data, config)
+    log_info("\nPréparation terminée")
+
+    # 4. Joindre les données
+    log_info("\nCréation de processed_data")
+    processed_data <- scales_data %>%
+      left_join(
+        demographics_data,
+        by = c(
+          "person_id_secure",
+          "timestamp", 
+          "month",
+          "group_id"
+        )
+      )
+    log_info("\nJointure terminée")
     
-    # 4. Export avec timestamp
+    # 5. Export avec timestamp
     output_dir <- "data/processed"
     if (!dir.exists(output_dir)) {
       dir.create(output_dir, recursive = TRUE)

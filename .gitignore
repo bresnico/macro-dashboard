@@ -58,4 +58,5 @@ temp/
 
 # Project specific
 tests/
+tests/**
 *.rds
