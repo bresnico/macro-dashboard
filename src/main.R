@@ -76,7 +76,7 @@ main <- function(survey_id, credentials) {
     # 3. Traitement des échelles et des données démographiques en parallèle
     log_info("\nCalcul des scores")
     scales_data <- prepare_all_scales_scores(std_data, config)
-    n_rows <- nrow(processed_data)
+    n_rows <- nrow(scales_data)
     log_info(glue("\nCalcul terminé: {n_rows} lignes"))
     log_info("\nPréparation des données démographiques")
     demographics_data <- process_demographics(std_data, config)
@@ -84,7 +84,7 @@ main <- function(survey_id, credentials) {
 
     # 4. Joindre les données
     log_info("\nCréation de processed_data")
-    pprocessed_data <- scales_data %>%
+    processed_data <- scales_data %>%
       left_join(
         demographics_data,
         by = c(
