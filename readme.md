@@ -40,6 +40,7 @@ install.packages(c(
   "yaml",       # Lecture des configurations
   "limer"       # API LimeSurvey
   "glue"        # Traitement des données
+  "httr"        # Requêtes HTTP (notifications Telegram)
 ))
 ```
 
@@ -50,15 +51,16 @@ install.packages(c(
 ├── dashboard_files/      # Fichiers générés par Quarto
 ├── src/
 │   ├── config/          
-│   │   ├── credentials.yml    # Configuration API (non versionné)
+│   │   ├── credentials.yml    # Configuration API, Telegram et accès chercheurs (non versionné)
 │   │   └── scales.yml        # Définition des échelles
-│   └── lib/            
-│       ├── connection.R      # Connexion LimeSurvey
-│       ├── import.R         # Import des données
-│       ├── scales.R        # Traitement des échelles
-│       └── main.R         # Pipeline principal
+│   ├── lib/            
+│   │   ├── connection.R      # Connexion LimeSurvey
+│   │   ├── import.R         # Import des données
+│   │   └── scales.R        # Traitement des échelles
+│   ├── main.R           # Pipeline principal avec notification Telegram
+│   └── render_notify.R  # Génération Quarto avec notification Telegram
 ├── data/
-│   └── processed/       # Données traitées
+│   └── processed/       # Données traitées (format CSV)
 ├── logs/                # Logs système
 ├── dashboard.qmd        # Dashboard Quarto principal
 └── README.md
@@ -80,6 +82,10 @@ limesurvey:
   username: 'USERNAME'
   password: 'PASSWORD'
   survey_id: 'SURVEY_ID'
+
+telegram:
+  bot_token: 'BOT_TOKEN'
+  chat_id: 'CHAT_ID'
 
 researcher_codes:
   - 'CODE1'
@@ -112,7 +118,7 @@ Le système gère actuellement 5 échelles standardisées :
 
 ## Pipeline de traitement
 
-### Import/Préparation des données
+### Flux principal
 
 ```mermaid
 flowchart TD
@@ -121,18 +127,33 @@ flowchart TD
     C -->|scales.R| D[Calcul des scores]
     D -->|main.R| E[Export CSV]
     E --> F[Dashboard Quarto]
+    E -->|Telegram| G[Notification]
+    F -->|render_notify.R| H[Notification]
 ```
 
-Le pipeline est exécuté via src/lib/main.R qui :
-1. Configure la connexion API
-2. Importe et standardise les données
-3. Calcule les scores par échelle
-4. Exporte les résultats datés
+### Notifications Telegram
+
+Le système intègre des notifications Telegram à deux niveaux :
+
+1. **Pipeline de données (main.R)**
+   - Notification du statut d'exécution
+   - Nombre d'observations traitées
+   - Temps d'exécution
+   - Messages d'erreur éventuels
+
+2. **Rendu du dashboard (render_notify.R)**
+   - Notification du succès/échec du rendu Quarto
+   - Redémarrage automatique du serveur Shiny sur Linux
+
+#### Configuration Telegram
+1. Créer un bot via @BotFather sur Telegram
+2. Récupérer le token du bot
+3. Créer un canal et y ajouter le bot
+4. Configurer le chat_id dans credentials.yml
 
 ### Détails du process
 
 ```mermaid
-
 flowchart TD
     subgraph "connection.R"
         A[setup_limesurvey_connection]
@@ -181,9 +202,24 @@ flowchart TD
     class I logNode
 ```
 
-### Mise à jour des données
+#### Mise à jour des données
 
-Les données sont mises à jour automatiquement 3 fois par jour via cronjob sur le serveur qui accueille l'application. L'heure de dernière mise à jour est affichée dans l'interface du dashboard.
+Les données sont mises à jour automatiquement 3 fois par jour via cronjob sur le serveur qui accueille l'application. L'heure de dernière mise à jour est affichée dans l'interface du dashboard. Chaque mise à jour déclenche :
+
+1. Exécution de main.R
+   - Collection et traitement des données
+   - Export des fichiers CSV
+   - Notification Telegram du statut
+
+2. Exécution de render_notify.R
+   - Rendu du dashboard Quarto
+   - Redémarrage du serveur Shiny si nécessaire
+   - Notification Telegram du statut
+
+Le statut de ces opérations peut être suivi via :
+- Les logs dans /logs/process.log
+- Les notifications Telegram
+- L'interface du dashboard
 
 ## Dashboard Quarto
 
