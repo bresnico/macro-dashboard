@@ -270,7 +270,49 @@ DTOutput("group_scale_table")
 
 # Espace recherche
 
-A venir !
+## {.sidebar}
+
+```{r}
+#| title: "Identification chercheur"
+
+textInput("researcher_id", 
+         "Code chercheur",
+         placeholder = "Entrez votre code chercheur")
+
+# Affichage du statut
+uiOutput("researcher_status")
+
+```
+
+
+## {.tabset} 
+
+### Plots
+
+plot
+```{r}
+plotlyOutput("research_plot", height = "600px")
+```
+
+### Résumé
+
+```{r}
+DTOutput("research_summary")
+```
+
+
+### Table
+
+```{r}
+#| content: card-toolbar
+
+uiOutput("download_button")
+```
+
+
+```{r}
+DTOutput("research_table")
+```
 
 ```{r}
 #| context: server
@@ -559,7 +601,20 @@ output$group_scale_plot <- renderPlotly({
     ) +
     theme_minimal()
     
-  ggplotly(p, tooltip = "text")
+  ggplotly(p, tooltip = "text") |> 
+    layout(
+    paper_bgcolor = "rgba(0,0,0,0)", 
+    plot_bgcolor = "rgba(0,0,0,0)",
+    font = list(color = "rgb(33, 37, 41)"),
+    xaxis = list(
+      gridcolor = "rgba(128,128,128,0.2)",
+      zerolinecolor = "rgba(128,128,128,0.2)"
+    ),
+    yaxis = list(
+      gridcolor = "rgba(128,128,128,0.2)", 
+      zerolinecolor = "rgba(128,128,128,0.2)"
+    )
+  )
 })
 
 # Table des données de groupe
@@ -632,4 +687,182 @@ output$GroupUsers <- renderText({
     nrow()
 })
 
+# Espace recherche----
+
+output$researcher_status <- renderUI({
+ req(input$researcher_id)
+ valid_code <- any(data$researcher_id == input$researcher_id, na.rm = TRUE)
+ 
+ if(valid_code) {
+   tagList(
+     div(style = "color: green;", icon("check-circle"), "Code valide"),
+     
+     checkboxGroupInput("research_scales", "Échelles", 
+       choices = unique(data$scale_label),
+       selected = unique(data$scale_label)),
+     
+     checkboxGroupInput("research_groups", "Groupes",
+       choices = unique(data$group_id),
+       selected = unique(data$group_id)),
+     
+     checkboxGroupInput("research_status", "Statut",
+       choices = unique(data$status),
+       selected = unique(data$status)),
+       
+     checkboxGroupInput("research_gender", "Genre",
+       choices = unique(data$gender),
+       selected = unique(data$gender)),
+       
+     checkboxGroupInput("research_age", "Âge",
+       choices = unique(data$age),
+       selected = unique(data$age)),
+       
+     checkboxGroupInput("research_experience", "Expérience",
+       choices = unique(data$experience),
+       selected = unique(data$experience))
+   )
+ } else {
+   div(style = "color: red;", icon("exclamation-circle"), "Code non reconnu")
+ }
+})
+
+filtered_research_data <- reactive({
+  req(input$researcher_id, input$research_scale, input$research_groups)
+  
+  data %>%
+    filter(
+      researcher_id == input$researcher_id,
+      scale_label == input$research_scale,
+      group_id %in% input$research_groups
+    )
+})
+
+# Plots
+
+output$research_plot <- renderPlotly({
+ req(input$researcher_id,
+     input$research_scales,
+     input$research_groups)
+ 
+ p <- data %>%
+   filter(
+     researcher_id == input$researcher_id,
+     scale_label %in% input$research_scales,
+     group_id %in% input$research_groups,
+     status %in% input$research_status,
+     gender %in% input$research_gender,
+     age %in% input$research_age,
+     experience %in% input$research_experience
+   ) %>%
+   ggplot(aes(x = month, y = score_value, color = score_type_label)) +
+   geom_boxplot() +
+   facet_wrap(~scale_label, scales = "free_y") +
+   theme_minimal() +
+   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+   labs(x = "Mois", y = "Score", color = "Type de score") 
+   
+ ggplotly(p) |> 
+   layout(
+    paper_bgcolor = "rgba(0,0,0,0)", 
+    plot_bgcolor = "rgba(0,0,0,0)",
+    font = list(color = "rgb(33, 37, 41)"),
+    xaxis = list(
+      gridcolor = "rgba(128,128,128,0.2)",
+      zerolinecolor = "rgba(128,128,128,0.2)"
+    ),
+    yaxis = list(
+      gridcolor = "rgba(128,128,128,0.2)", 
+      zerolinecolor = "rgba(128,128,128,0.2)"
+    )
+  )
+})
+
+# Résumé
+
+output$research_summary <- renderDT({
+ req(input$researcher_id, 
+     input$research_scales,
+     input$research_groups,
+     input$research_status,
+     input$research_gender,
+     input$research_age,
+     input$research_experience)
+ 
+ data %>%
+   filter(
+     researcher_id == input$researcher_id,
+     scale_label %in% input$research_scales,
+     group_id %in% input$research_groups,
+     status %in% input$research_status,
+     gender %in% input$research_gender,
+     age %in% input$research_age,
+     experience %in% input$research_experience
+   ) %>%
+   group_by(scale_label, score_type_label) %>%
+   summarise(
+     N = n(),
+     Moyenne = mean(score_value, na.rm = TRUE),
+     "Écart-type" = sd(score_value, na.rm = TRUE),
+     Min = min(score_value, na.rm = TRUE),
+     Max = max(score_value, na.rm = TRUE),
+     .groups = 'drop'
+   ) %>%
+   datatable(
+     options = list(dom = 't'),
+     rownames = FALSE
+   ) %>%
+   formatRound(columns = c("Moyenne", "Écart-type", "Min", "Max"), digits = 2)
+})
+
+# UI - Bouton de téléchargement au-dessus du tableau
+output$download_button <- renderUI({
+ req(input$researcher_id, any(data$researcher_id == input$researcher_id, na.rm = TRUE))
+ downloadButton("downloadData", "Télécharger les données filtrées")
+})
+
+# Server
+output$downloadData <- downloadHandler(
+ filename = function() {
+   paste("research_data_", Sys.Date(), ".csv", sep = "")
+ },
+ content = function(file) {
+   filtered_data <- data %>%
+     filter(
+       researcher_id == input$researcher_id,
+       scale_label %in% input$research_scales,
+       group_id %in% input$research_groups,
+       status %in% input$research_status,
+       gender %in% input$research_gender,
+       age %in% input$research_age,
+       experience %in% input$research_experience
+     )
+   write.csv(filtered_data, file, row.names = FALSE)
+ }
+)
+
+# Table
+output$research_table <- renderDT({
+ req(input$researcher_id, 
+     input$research_scales, 
+     input$research_groups,
+     input$research_status,
+     input$research_gender,
+     input$research_age,
+     input$research_experience)
+ 
+ data %>%
+   filter(
+     researcher_id == input$researcher_id,
+     scale_label %in% input$research_scales,
+     group_id %in% input$research_groups,
+     status %in% input$research_status,
+     gender %in% input$research_gender,
+     age %in% input$research_age,
+     experience %in% input$research_experience
+   ) %>%
+   datatable(
+     options = list(pageLength = 25, scrollX = TRUE),
+     rownames = FALSE
+   )
+})
 ```

@@ -96,7 +96,12 @@ main <- function(survey_id, credentials) {
       )
     log_info("\nJointure terminée")
     
-    # 5. Export avec timestamp
+    # Ajout de la colonne reseacher id pour chaque observation avec credentials$researcher_codes[1]
+    log_info("\nCréation de researcher_id")
+    processed_data$researcher_id <- credentials$researcher_codes[1]
+    log_info("\nCréation de researcher_id terminée")
+    
+    # 6. Export avec timestamp
     output_dir <- "data/processed"
     if (!dir.exists(output_dir)) {
       dir.create(output_dir, recursive = TRUE)
