@@ -12,47 +12,52 @@ server: shiny
 
 ```{r}
 #| context: setup
+
 suppressPackageStartupMessages({
-library(dplyr)
-library(readr)
-library(lubridate)
-library(ggplot2)
-library(plotly)
 library(shiny)
-library(DT)
 library(bslib)
-library(bsicons)
+library(bsicons)  # UI
+library(dplyr)
+library(readr)    # Data manipulation
+library(plotly)
+library(lubridate)
+library(ggplot2)  # Visualization
+library(DT)       # Tables
 })
 
-get_latest_survey_data <- function() {
-  files <- list.files("data/processed",
-                      pattern = "^survey_data_.*\\.csv$",
-                      full.names = TRUE)
-  latest_file <- files[which.max(file.info(files)$mtime)]
-  read_csv(latest_file, locale = locale(encoding = "UTF-8"), show_col_types = FALSE)
-}
-
-data <- get_latest_survey_data()
-
-get_survey_data_update_date <- function() {
-  files <- list.files("data/processed", 
-                     pattern = "^survey_data_.*\\.csv$",
-                     full.names = TRUE)
-  
-  if (length(files) == 0) {
-    return(NULL)
-  }
-  
-  # Récupérer la date du fichier le plus récent
-  latest_date <- file.info(files)$mtime[which.max(file.info(files)$mtime)]
-  
-  # Formater la date en français
-  formatted_date <- format(latest_date, 
+get_survey_data <- function() {
+  tryCatch({
+    files <- list.files(
+      "data/processed",
+      pattern = "^survey_data_.*\\.csv$",
+      full.names = TRUE
+    )
+    if(length(files) == 0) {
+      stop("No data files found")
+    }
+    
+    latest_index <- which.max(file.info(files)$mtime)
+    latest_file <- files[latest_index]
+    latest_date <- format(file.info(files)$mtime[latest_index],
                          format = "%H:%M",
                          tz = "Europe/Paris")
-  
-  return(formatted_date)
+    
+    list(
+      data = read_csv(latest_file, 
+                     locale = locale(encoding = "UTF-8"),
+                     show_col_types = FALSE),
+      update_time = latest_date
+    )
+  }, error = function(e) {
+    warning(paste("Error loading data:", e$message))
+    return(list(data = NULL, update_time = NULL))
+  })
 }
+
+# Usage
+survey_data <- get_survey_data()
+data <- survey_data$data
+update_time <- survey_data$update_time
 
 ```
 
@@ -96,7 +101,7 @@ value = data |>
 list(
   icon = "calendar-check",
   #color = "white",
-  value = get_survey_data_update_date()
+  value = update_time
 )
 
 ```
@@ -165,7 +170,7 @@ value_box(
 
 list(
   color = "morph",
-  value = get_survey_data_update_date(),
+  value = update_time,
   icon = "calendar-check"
 )
 
@@ -215,7 +220,7 @@ textInput("group_id",
           "Code de l'établissement",
           placeholder = "Par exemple: un")
 
-uiOutput("group_id_status")
+uiOutput("group_status")
 ```
 
 ```{r}
@@ -242,7 +247,7 @@ value_box(
 
 list(
   color = "morph",
-  value = get_survey_data_update_date(),
+  value = update_time,
   icon = "calendar-check"
 )
 
@@ -295,7 +300,6 @@ uiOutput("researcher_status")
 
 ### Plots
 
-plot
 ```{r}
 plotlyOutput("research_plot", height = "600px")
 ```
@@ -506,6 +510,21 @@ output$GroupeRef <- renderText({
 })
 
 # espace direction----
+
+output$group_status <- renderUI({
+  req(input$group_id)
+  valid_id <- any(data$group_id == input$group_id, na.rm = TRUE)
+  
+  if(valid_id) {
+    tagList(
+      div(style = "color: green;", icon("check-circle"), "Code valide"),
+      # Mettre ici les éléments d'UI supplémentaires pour un groupe valide
+    )
+  } else {
+    div(style = "color: red;", icon("exclamation-circle"), 
+        "Code établissement non reconnu")
+  }
+})
 
 # Données réactives pour le groupe
 group_data <- reactive({
