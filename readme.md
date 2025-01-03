@@ -48,21 +48,22 @@ install.packages(c(
 
 ```
 .
-├── dashboard_files/      # Fichiers générés par Quarto
+├── dashboard_files/         # Fichiers générés par Quarto
 ├── src/
 │   ├── config/          
-│   │   ├── credentials.yml    # Configuration API, Telegram et accès chercheurs (non versionné)
-│   │   └── scales.yml        # Définition des échelles
+│   │   ├── credentials.yml  # Configuration API, Telegram et accès chercheurs (non versionné)
+│   │   └── scales.yml       # Définition des échelles
 │   ├── lib/            
-│   │   ├── connection.R      # Connexion LimeSurvey
+│   │   ├── connection.R     # Connexion LimeSurvey
 │   │   ├── import.R         # Import des données
-│   │   └── scales.R        # Traitement des échelles
-│   ├── main.R           # Pipeline principal avec notification Telegram
-│   └── render_notify.R  # Génération Quarto avec notification Telegram
+│   │   ├── scales.R         # Traitement des échelles
+│   │   └── demographics.R   # Traitement des données démographiques
+│   ├── main.R               # Pipeline principal avec notification Telegram
+│   └── render_notify.R      # Génération Quarto avec notification Telegram
 ├── data/
-│   └── processed/       # Données traitées (format CSV)
-├── logs/                # Logs système
-├── dashboard.qmd        # Dashboard Quarto principal
+│   └── processed/           # Données traitées (format CSV)
+├── logs/                    # Logs système
+├── dashboard.qmd            # Dashboard Quarto principal
 └── README.md
 ```
 
@@ -125,10 +126,13 @@ flowchart TD
     A[LimeSurvey API] -->|connection.R| B[Import brut]
     B -->|import.R| C[Standardisation]
     C -->|scales.R| D[Calcul des scores]
-    D -->|main.R| E[Export CSV]
-    E --> F[Dashboard Quarto]
-    E -->|Telegram| G[Notification]
-    F -->|render_notify.R| H[Notification]
+    C -->|demographics.R| E[Traitement démographique] 
+    D --> F[Jointure des données]
+    E --> F
+    F -->|main.R| G[Export CSV]
+    G --> H[Dashboard Quarto]
+    G -->|Telegram| I[Notification]
+    H -->|render_notify.R| J[Notification]
 ```
 
 ### Notifications Telegram
@@ -158,48 +162,53 @@ flowchart TD
     subgraph "connection.R"
         A[setup_limesurvey_connection]
     end
-
     subgraph "import.R"
         B[get_limesurvey_data]
         C[standardize_limesurvey_names]
     end
-
     subgraph "scales.R"
         D[prepare_numeric_responses]
         E[process_single_scale]
         F[prepare_all_scales_scores]
-        G[prepare_response_mapping]
     end
-
+    subgraph "demographics.R" 
+        J[process_demographics]
+    end
     subgraph "main.R"
         H[main function]
         I[log_info]
+        K[join_data]
     end
-
-    %% Connexions du workflow
+    
+    %% Workflow principal
     H -->|"1. Start"| I
     I -->|"Log start"| A
     A -->|"Success"| B
     B -->|"Raw data"| C
     C -->|"Standardized data"| F
+    C -->|"Standardized data"| J
     
-    %% Sous-processus de prepare_all_scales_scores
+    %% Sous-processus scales
     F -->|"For each scale"| D
     D -->|"Numeric data"| E
     E -->|"Scale scores"| F
     
-    %% Finalization
-    F -->|"Final scores"| H
+    %% Jointure et finalisation
+    F -->|"Scale scores"| K
+    J -->|"Demographics"| K
+    K -->|"Final data"| H
     H -->|"Log & Save"| I
-
+    
     %% Styling
     classDef processNode fill:#f9f,stroke:#333,stroke-width:2px
     classDef dataNode fill:#bbf,stroke:#333,stroke-width:2px
     classDef logNode fill:#bfb,stroke:#333,stroke-width:2px
+    classDef demoNode fill:#ffd,stroke:#333,stroke-width:2px
     
     class A,B,C,D,E,F processNode
-    class G,H dataNode
+    class H dataNode
     class I logNode
+    class J,K demoNode
 ```
 
 #### Mise à jour des données
