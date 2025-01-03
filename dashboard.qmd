@@ -297,13 +297,6 @@ uiOutput("researcher_status")
 
 ```
 
-```{r}
-#| title: "commandes"
-
-
-```
-
-
 ## {.tabset} 
 
 ### Plots
@@ -340,7 +333,6 @@ DTOutput("research_table")
 # Espace enseignant----
 
 # 1. Validation et réactivité ----
-
 output$teacher_status <- renderUI({
   req(input$teacher_id)
   valid_teacher_id <- any(data$person_id_secure == input$teacher_id, na.rm = TRUE)
@@ -360,23 +352,14 @@ output$teacher_status <- renderUI({
 ## Données réactives pour l'id de l'enseignant (même person_id dans le bon group_id)
 teacher_data <- reactive({
   req(input$teacher_id)
-  # Valider que l'ID n'est pas nul
-  
   validate(need(nchar(input$teacher_id) > 0, ""))
-  
-  # Valider que l'ID existe dans les données
-  validate(need(
-    any(data$person_id_secure == input$teacher_id, na.rm = TRUE),
-    ""
-  ))
+  validate(need(any(data$person_id_secure == input$teacher_id, na.rm = TRUE), ""))
 
-  # D'abord trouver le matching avec l'ID sécurisé pour obtenir person_id et group_id
   secure_match <- data |>
     filter(person_id_secure == input$teacher_id) |> 
     distinct(person_id, group_id) |> 
     head(1)  # On prend le premier match si plusieurs
   
-  # Ensuite filtrer toutes les données correspondant à ce person_id dans ce group_id
   data |> 
     filter(
       person_id == secure_match$person_id,
@@ -584,14 +567,8 @@ output$group_status <- renderUI({
 
 group_data <- reactive({
   req(input$group_id)
-  # Valider que l'ID n'est pas vide
   validate(need(nchar(input$group_id) > 0, ""))
-  
-  # Valider que l'ID existe dans les données
-  validate(need(
-    any(data$group_id == input$group_id, na.rm = TRUE),
-    ""
-  ))
+  validate(need(any(data$group_id == input$group_id, na.rm = TRUE), ""))
   
   # Filtrer les données
   data |>
@@ -601,7 +578,6 @@ group_data <- reactive({
 ## Calcul des références
 reference_data <- reactive({
   req(group_data())
-  
   data |>
     group_by(month, scale_label, score_type_label) |>
     summarise(
@@ -615,7 +591,6 @@ reference_data <- reactive({
 ## Calculs des moyennes de groupe (utilisé par plot et table)
 group_means <- reactive({
   req(group_data(), input$selected_group_scale, input$selected_group_scores)
-  
   group_data() |>
     filter(
       scale_label == input$selected_group_scale,
@@ -782,6 +757,7 @@ output$GroupUsers <- renderText({
 
 valid_researcher <- reactive({
   req(input$researcher_id)
+  validate(need(nchar(input$researcher_id) > 0, ""))
   any(data$researcher_id == input$researcher_id, na.rm = TRUE)
 })
 
@@ -831,40 +807,16 @@ if(valid_researcher()) {
 
 # Observers pour maintenir au moins une sélection
 observe({
-  if(length(input$research_scales) == 0) {
-    updateSelectInput(session, "research_scales", 
-                     selected = unique(data$scale_label)[1])
+  inputs <- c("research_scales", "research_groups", "research_status", 
+              "research_gender", "research_age")
+  
+  for(input_name in inputs) {
+    if(length(input[[input_name]]) == 0) {
+      updateSelectInput(session, input_name, 
+                       selected = unique(data[[gsub("research_", "", input_name)]])[1])
+    }
   }
 })
-
-observe({
-  if(length(input$research_groups) == 0) {
-    updateSelectInput(session, "research_groups", 
-                     selected = unique(data$group_id)[1])
-  }
-})
-
-observe({
-  if(length(input$research_status) == 0) {
-    updateSelectInput(session, "research_status", 
-                     selected = unique(data$status)[1])
-  }
-})
-
-observe({
-  if(length(input$research_gender) == 0) {
-    updateSelectInput(session, "research_gender", 
-                     selected = unique(data$gender)[1])
-  }
-})
-
-observe({
-  if(length(input$research_age) == 0) {
-    updateSelectInput(session, "research_age", 
-                     selected = unique(data$age)[1])
-  }
-})
-
 
 # 2. Données et calculs ----
 
@@ -872,12 +824,15 @@ observe({
 
 # Données filtrées
 filtered_research_data <- reactive({
-  req(valid_researcher(),
-      input$research_scales,
+  if (!valid_researcher()) return(NULL)
+  validate(need(valid_researcher(), "Code chercheur invalide"))
+  
+  req(input$research_scales,
       input$research_groups, 
       input$research_status,
       input$research_gender,
-      input$research_age)
+      input$research_age
+      )
   
   data |> 
     filter(
@@ -887,23 +842,18 @@ filtered_research_data <- reactive({
       status %in% input$research_status,
       gender %in% input$research_gender,
       age %in% input$research_age
-    )
+      )
 })
-
 
 # 3. Visualisations ----
 
 ## Plots
 
 output$research_plot <- renderPlotly({
-   data_filtered <- filtered_research_data()
-  
-  if (is.null(input$researcher_id) || 
-     nchar(input$researcher_id) == 0 || 
-     !any(data$researcher_id == input$researcher_id, na.rm = TRUE) ||
-     nrow(data_filtered) == 0) return(NULL)
-   
-  p <- data_filtered |>
+  if (is.null(filtered_research_data()) || nrow(filtered_research_data()) == 0) return(NULL)
+  validate(need(nrow(filtered_research_data()) > 0, "Aucune donnée à afficher"))
+
+  p <- filtered_research_data() |>
     ggplot(aes(x = month, y = score_value, color = score_type_label)) +
     geom_boxplot() +
     facet_wrap(~scale_label, scales = "free_y") +
@@ -930,16 +880,10 @@ output$research_plot <- renderPlotly({
 ## Data Summary
 
 output$research_summary <- renderDT({
+  if (is.null(filtered_research_data()) || nrow(filtered_research_data()) == 0) return(NULL)
+  validate(need(nrow(filtered_research_data()) > 0, "Aucune donnée à afficher"))
 
-  data_filtered <- filtered_research_data()
-  
-  if (is.null(input$researcher_id) || 
-     nchar(input$researcher_id) == 0 || 
-     !any(data$researcher_id == input$researcher_id, na.rm = TRUE) ||
-     nrow(data_filtered) == 0) return(NULL)
-  
-  
-  data_filtered |>
+  filtered_research_data() |>
     group_by(scale_label, score_type_label) |>
     summarise(
       N = n(),
@@ -958,16 +902,10 @@ output$research_summary <- renderDT({
 
 ## Table
 output$research_table <- renderDT({
+  if (is.null(filtered_research_data()) || nrow(filtered_research_data()) == 0) return(NULL)
+  validate(need(nrow(filtered_research_data()) > 0, "Aucune donnée à afficher"))
   
-  data_filtered <- filtered_research_data()
-  
-  if (is.null(input$researcher_id) || 
-     nchar(input$researcher_id) == 0 || 
-     !any(data$researcher_id == input$researcher_id, na.rm = TRUE) ||
-     nrow(data_filtered) == 0) return(NULL)
-  
-
-  data_filtered |>
+  filtered_research_data() |>
     datatable(
       options = list(pageLength = 25, scrollX = TRUE),
       rownames = FALSE
@@ -1000,5 +938,6 @@ output$downloadData <- downloadHandler(
     write_csv(filtered_research_data(), file)
   }
 )
+
 ```
 
