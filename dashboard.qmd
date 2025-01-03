@@ -3,27 +3,33 @@ title: "Plateforme de suivi du développement professionnel"
 format:
   dashboard:
     theme: morph
-    nav-buttons: [github]
+    nav-buttons:
+      - icon: github
+      - href: https://github.com/bresnico/macro-dashboard
 server: shiny
 ---
 
 
 ```{r}
 #| context: setup
-
-library(tidyverse)
+suppressPackageStartupMessages({
+library(dplyr)
+library(readr)
+library(lubridate)
+library(ggplot2)
 library(plotly)
 library(shiny)
 library(DT)
 library(bslib)
 library(bsicons)
+})
 
 get_latest_survey_data <- function() {
   files <- list.files("data/processed",
                       pattern = "^survey_data_.*\\.csv$",
                       full.names = TRUE)
   latest_file <- files[which.max(file.info(files)$mtime)]
-  read_csv(latest_file, locale = locale(encoding = "UTF-8"))
+  read_csv(latest_file, locale = locale(encoding = "UTF-8"), show_col_types = FALSE)
 }
 
 data <- get_latest_survey_data()
@@ -101,10 +107,10 @@ list(
 #| echo: false
 #| output: asis
 
-scales_list <- data %>%
-  select(scale_label) %>%
-  distinct() %>%
-  pull() %>%
+scales_list <- data |> 
+  select(scale_label) |> 
+  distinct() |> 
+  pull() |> 
   sort()
 
 # Créer des cartes en colonnes
@@ -325,16 +331,16 @@ teacher_data <- reactive({
   validate(need(nchar(input$teacher_id) > 0, "Veuillez saisir un identifiant"))
   
   # D'abord trouver le matching avec l'ID sécurisé pour obtenir person_id et group_id
-  secure_match <- data %>%
-    filter(person_id_secure == input$teacher_id) %>%
-    distinct(person_id, group_id) %>%
+  secure_match <- data |> 
+    filter(person_id_secure == input$teacher_id) |> 
+    distinct(person_id, group_id) |> 
     head(1)  # On prend le premier match si plusieurs
   
   validate(need(nrow(secure_match) > 0, 
                "Identifiant non reconnu. Vérifiez votre saisie (exemple: 01NS14-banane)"))
   
   # Ensuite filtrer toutes les données correspondant à ce person_id dans ce group_id
-  filtered_data <- data %>%
+  filtered_data <- data |> 
     filter(
       person_id == secure_match$person_id,
       group_id == secure_match$group_id,
@@ -360,9 +366,9 @@ output$scale_choices <- renderUI({
 output$score_choices <- renderUI({
   req(teacher_data(), input$selected_scale)
   
-  scores <- teacher_data() %>%
-    filter(scale_label == input$selected_scale) %>%
-    pull(score_type_label) %>%
+  scores <- teacher_data() |> 
+    filter(scale_label == input$selected_scale) |> 
+    pull(score_type_label) |> 
     unique()
   
   checkboxGroupInput(
@@ -377,14 +383,14 @@ output$score_choices <- renderUI({
 output$scale_plot <- renderPlotly({
   req(teacher_data(), input$selected_scale, input$selected_scores)
   
-  plot_data <- teacher_data() %>%
+  plot_data <- teacher_data() |> 
     filter(
       scale_label == input$selected_scale,
       score_type_label %in% input$selected_scores
     )
   
-  reference_segments <- plot_data %>% 
-    group_by(month, score_type_label) %>%
+  reference_segments <- plot_data |> 
+    group_by(month, score_type_label) |> 
     summarise(
       reference_value = first(reference_value),
       start = floor_date(min(timestamp), "month"),
@@ -440,11 +446,11 @@ output$scale_plot <- renderPlotly({
 output$scale_table <- renderDT({
  req(teacher_data(), input$selected_scale, input$selected_scores)
  
- table_data <- teacher_data() %>%
+ table_data <- teacher_data() |> 
    filter(
      scale_label == input$selected_scale,
      score_type_label %in% input$selected_scores
-   ) %>%
+   ) |> 
    select(
      timestamp,
      score_type_label,
@@ -457,7 +463,7 @@ output$scale_table <- renderDT({
  
  validate(need(nrow(table_data) > 0, "Aucune donnée à afficher"))
  
- table_data %>%
+ table_data |> 
    rename(
      "Date" = timestamp,
      "Type de score" = score_type_label,
@@ -466,8 +472,8 @@ output$scale_table <- renderDT({
      "Écart-type" = reference_sd,
      "Quartile" = quartile,
      "N" = n_group
-   ) %>%
-   arrange(desc(`Date`)) %>%  # Plus récent en premier
+   ) |> 
+   arrange(desc(`Date`)) |>   # Plus récent en premier
    datatable(
      options = list(
        pageLength = 10,
@@ -475,11 +481,11 @@ output$scale_table <- renderDT({
        ordering = FALSE
      ),
      rownames = FALSE
-   ) %>%
+   )  |> 
    formatRound(
      columns = c("Score personnel", "Moyenne du groupe", "Écart-type"),
      digits = 2
-   ) %>%
+   ) |>
    formatDate(
      columns = "Date",
      method = "toLocaleDateString"
@@ -506,7 +512,7 @@ group_data <- reactive({
   req(input$group_id)
   validate(need(nchar(input$group_id) > 0, "Veuillez saisir un code établissement"))
   
-  filtered_data <- data %>%
+  filtered_data <- data |>
     filter(group_id == input$group_id)
   
   validate(need(nrow(filtered_data) > 0, "Aucune donnée pour cet établissement"))
@@ -518,8 +524,8 @@ group_data <- reactive({
 reference_data <- reactive({
   req(group_data())
   
-  data %>%
-    group_by(month, scale_label, score_type_label) %>%
+  data |>
+    group_by(month, scale_label, score_type_label) |>
     summarise(
       reference_value = mean(score_value, na.rm = TRUE),
       reference_sd = sd(score_value, na.rm = TRUE),
@@ -544,9 +550,9 @@ output$group_scale_choices <- renderUI({
 output$group_score_choices <- renderUI({
   req(group_data(), input$selected_group_scale)
   
-  scores <- group_data() %>%
-    filter(scale_label == input$selected_group_scale) %>%
-    pull(score_type_label) %>%
+  scores <- group_data() |>
+    filter(scale_label == input$selected_group_scale) |>
+    pull(score_type_label) |>
     unique()
   
   checkboxGroupInput(
@@ -563,12 +569,12 @@ output$group_scale_plot <- renderPlotly({
       input$selected_group_scale, input$selected_group_scores)
   
   # Moyennes du groupe
-  group_means <- group_data() %>%
+  group_means <- group_data() |>
     filter(
       scale_label == input$selected_group_scale,
       score_type_label %in% input$selected_group_scores
-    ) %>%
-    group_by(month, scale_label, score_type_label) %>%
+    ) |>
+    group_by(month, scale_label, score_type_label) |>
     summarise(
       group_mean = mean(score_value, na.rm = TRUE),
       n_group = n(),
@@ -576,13 +582,13 @@ output$group_scale_plot <- renderPlotly({
     )
   
   # Joindre avec les références
-  plot_data <- group_means %>%
+  plot_data <- group_means |>
     left_join(reference_data(), 
               by = c("month", "scale_label", "score_type_label"))
   
   validate(need(nrow(plot_data) > 0, "Aucune donnée à afficher"))
   
-  p <- plot_data %>%
+  p <- plot_data |>
     ggplot() +
     # Ligne groupe
     geom_line(aes(x = month, y = group_mean, 
@@ -622,21 +628,21 @@ output$group_scale_table <- renderDT({
   req(group_data(), reference_data(),
       input$selected_group_scale, input$selected_group_scores)
   
-  group_means <- group_data() %>%
+  group_means <- group_data() |>
     filter(
       scale_label == input$selected_group_scale,
       score_type_label %in% input$selected_group_scores
-    ) %>%
-    group_by(month, scale_label, score_type_label) %>%
+    ) |>
+    group_by(month, scale_label, score_type_label) |>
     summarise(
       group_mean = mean(score_value, na.rm = TRUE),
       n_group = n(),
       .groups = "drop"
     )
   
-  table_data <- group_means %>%
+  table_data <- group_means |>
     left_join(reference_data(),
-              by = c("month", "scale_label", "score_type_label")) %>%
+              by = c("month", "scale_label", "score_type_label")) |>
     select(
       month,
       score_type_label,
@@ -649,7 +655,7 @@ output$group_scale_table <- renderDT({
   
   validate(need(nrow(table_data) > 0, "Aucune donnée à afficher"))
   
-  table_data %>%
+  table_data |>
     rename(
       "Mois" = month,
       "Type de score" = score_type_label,
@@ -658,8 +664,8 @@ output$group_scale_table <- renderDT({
       "Écart-type global" = reference_sd,
       "N groupe" = n_group,
       "N total" = n_total
-    ) %>%
-    arrange(desc(`Mois`)) %>%
+    ) |>
+    arrange(desc(`Mois`)) |>
     datatable(
       options = list(
         pageLength = 10,
@@ -667,7 +673,7 @@ output$group_scale_table <- renderDT({
         ordering = FALSE
       ),
       rownames = FALSE
-    ) %>%
+    ) |>
     formatRound(
       columns = c("Moyenne du groupe", "Moyenne globale", "Écart-type global"),
       digits = 2
@@ -675,15 +681,15 @@ output$group_scale_table <- renderDT({
 })
 # Nombre d'observations
 output$GroupObservations <- renderText({
-  group_data() %>% 
-    distinct(timestamp, person_id) %>%  # On ne compte qu'une fois par mois et par personne
+  group_data() |> 
+    distinct(timestamp, person_id) |>  # On ne compte qu'une fois par mois et par personne
     nrow()
 })
 
 # Nombre d'utilisateurs uniques
 output$GroupUsers <- renderText({
-  group_data() %>%
-    distinct(person_id) %>%
+  group_data() |>
+    distinct(person_id) |>
     nrow()
 })
 
@@ -729,7 +735,7 @@ output$researcher_status <- renderUI({
 filtered_research_data <- reactive({
   req(input$researcher_id, input$research_scale, input$research_groups)
   
-  data %>%
+  data |>
     filter(
       researcher_id == input$researcher_id,
       scale_label == input$research_scale,
@@ -744,7 +750,7 @@ output$research_plot <- renderPlotly({
      input$research_scales,
      input$research_groups)
  
- p <- data %>%
+ p <- data |>
    filter(
      researcher_id == input$researcher_id,
      scale_label %in% input$research_scales,
@@ -753,7 +759,7 @@ output$research_plot <- renderPlotly({
      gender %in% input$research_gender,
      age %in% input$research_age,
      experience %in% input$research_experience
-   ) %>%
+   ) |>
    ggplot(aes(x = month, y = score_value, color = score_type_label)) +
    geom_boxplot() +
    facet_wrap(~scale_label, scales = "free_y") +
@@ -788,7 +794,7 @@ output$research_summary <- renderDT({
      input$research_age,
      input$research_experience)
  
- data %>%
+ data |>
    filter(
      researcher_id == input$researcher_id,
      scale_label %in% input$research_scales,
@@ -797,8 +803,8 @@ output$research_summary <- renderDT({
      gender %in% input$research_gender,
      age %in% input$research_age,
      experience %in% input$research_experience
-   ) %>%
-   group_by(scale_label, score_type_label) %>%
+   ) |>
+   group_by(scale_label, score_type_label) |>
    summarise(
      N = n(),
      Moyenne = mean(score_value, na.rm = TRUE),
@@ -806,11 +812,11 @@ output$research_summary <- renderDT({
      Min = min(score_value, na.rm = TRUE),
      Max = max(score_value, na.rm = TRUE),
      .groups = 'drop'
-   ) %>%
+   ) |>
    datatable(
      options = list(dom = 't'),
      rownames = FALSE
-   ) %>%
+   ) |>
    formatRound(columns = c("Moyenne", "Écart-type", "Min", "Max"), digits = 2)
 })
 
@@ -826,7 +832,7 @@ output$downloadData <- downloadHandler(
    paste("research_data_", Sys.Date(), ".csv", sep = "")
  },
  content = function(file) {
-   filtered_data <- data %>%
+   filtered_data <- data |>
      filter(
        researcher_id == input$researcher_id,
        scale_label %in% input$research_scales,
@@ -850,7 +856,7 @@ output$research_table <- renderDT({
      input$research_age,
      input$research_experience)
  
- data %>%
+ data |>
    filter(
      researcher_id == input$researcher_id,
      scale_label %in% input$research_scales,
@@ -859,7 +865,7 @@ output$research_table <- renderDT({
      gender %in% input$research_gender,
      age %in% input$research_age,
      experience %in% input$research_experience
-   ) %>%
+   ) |>
    datatable(
      options = list(pageLength = 25, scrollX = TRUE),
      rownames = FALSE
