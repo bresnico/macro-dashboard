@@ -12,47 +12,52 @@ server: shiny
 
 ```{r}
 #| context: setup
+
 suppressPackageStartupMessages({
-library(dplyr)
-library(readr)
-library(lubridate)
-library(ggplot2)
-library(plotly)
 library(shiny)
-library(DT)
 library(bslib)
-library(bsicons)
+library(bsicons)  # UI
+library(dplyr)
+library(readr)    # Data manipulation
+library(plotly)
+library(lubridate)
+library(ggplot2)  # Visualization
+library(DT)       # Tables
 })
 
-get_latest_survey_data <- function() {
-  files <- list.files("data/processed",
-                      pattern = "^survey_data_.*\\.csv$",
-                      full.names = TRUE)
-  latest_file <- files[which.max(file.info(files)$mtime)]
-  read_csv(latest_file, locale = locale(encoding = "UTF-8"), show_col_types = FALSE)
-}
-
-data <- get_latest_survey_data()
-
-get_survey_data_update_date <- function() {
-  files <- list.files("data/processed", 
-                     pattern = "^survey_data_.*\\.csv$",
-                     full.names = TRUE)
-  
-  if (length(files) == 0) {
-    return(NULL)
-  }
-  
-  # Récupérer la date du fichier le plus récent
-  latest_date <- file.info(files)$mtime[which.max(file.info(files)$mtime)]
-  
-  # Formater la date en français
-  formatted_date <- format(latest_date, 
+get_survey_data <- function() {
+  tryCatch({
+    files <- list.files(
+      "data/processed",
+      pattern = "^survey_data_.*\\.csv$",
+      full.names = TRUE
+    )
+    if(length(files) == 0) {
+      stop("No data files found")
+    }
+    
+    latest_index <- which.max(file.info(files)$mtime)
+    latest_file <- files[latest_index]
+    latest_date <- format(file.info(files)$mtime[latest_index],
                          format = "%H:%M",
                          tz = "Europe/Paris")
-  
-  return(formatted_date)
+    
+    list(
+      data = read_csv(latest_file, 
+                     locale = locale(encoding = "UTF-8"),
+                     show_col_types = FALSE),
+      update_time = latest_date
+    )
+  }, error = function(e) {
+    warning(paste("Error loading data:", e$message))
+    return(list(data = NULL, update_time = NULL))
+  })
 }
+
+# Usage
+survey_data <- get_survey_data()
+data <- survey_data$data
+update_time <- survey_data$update_time
 
 ```
 
@@ -96,7 +101,7 @@ value = data |>
 list(
   icon = "calendar-check",
   #color = "white",
-  value = get_survey_data_update_date()
+  value = update_time
 )
 
 ```
@@ -134,7 +139,7 @@ textInput("teacher_id",
           "Votre identifiant personnel",
           placeholder = "Par exemple: 01NS14-artichaut")
 
-uiOutput("id_status")
+uiOutput("teacher_status")
 
 ```
 
@@ -165,7 +170,7 @@ value_box(
 
 list(
   color = "morph",
-  value = get_survey_data_update_date(),
+  value = update_time,
   icon = "calendar-check"
 )
 
@@ -215,7 +220,7 @@ textInput("group_id",
           "Code de l'établissement",
           placeholder = "Par exemple: un")
 
-uiOutput("group_id_status")
+uiOutput("group_status")
 ```
 
 ```{r}
@@ -242,7 +247,7 @@ value_box(
 
 list(
   color = "morph",
-  value = get_survey_data_update_date(),
+  value = update_time,
   icon = "calendar-check"
 )
 
@@ -260,15 +265,17 @@ uiOutput("group_score_choices")
 
 ### {.tabset}
 
+#### Plot
+
 ```{r}
-#| title: "Plot"
 
 plotlyOutput("group_scale_plot")
 
 ```
 
+#### Table
+
 ```{r}
-#| title: "Table"
 
 DTOutput("group_scale_table")
 
@@ -290,12 +297,10 @@ uiOutput("researcher_status")
 
 ```
 
-
 ## {.tabset} 
 
 ### Plots
 
-plot
 ```{r}
 plotlyOutput("research_plot", height = "600px")
 ```
@@ -320,35 +325,50 @@ uiOutput("download_button")
 DTOutput("research_table")
 ```
 
+<!-- Serveur - partie enseignant -->
+
 ```{r}
 #| context: server
 
 # Espace enseignant----
 
-# Données réactives pour l'id de l'enseignant (même person_id dans le bon group_id)
+# 1. Validation et réactivité ----
+output$teacher_status <- renderUI({
+  req(input$teacher_id)
+  valid_teacher_id <- any(data$person_id_secure == input$teacher_id, na.rm = TRUE)
+  
+  if(valid_teacher_id) {
+    tagList(
+      div(style = "color: green;", icon("check-circle"), "Identifiant valide"),
+    )
+  } else {
+    div(style = "color: red;", icon("exclamation-circle"), 
+        "Identifiant non reconnu")
+  }
+})
+
+# 2. Données et calculs ----
+
+## Données réactives pour l'id de l'enseignant (même person_id dans le bon group_id)
 teacher_data <- reactive({
   req(input$teacher_id)
-  validate(need(nchar(input$teacher_id) > 0, "Veuillez saisir un identifiant"))
-  
-  # D'abord trouver le matching avec l'ID sécurisé pour obtenir person_id et group_id
-  secure_match <- data |> 
+  validate(need(nchar(input$teacher_id) > 0, ""))
+  validate(need(any(data$person_id_secure == input$teacher_id, na.rm = TRUE), ""))
+
+  secure_match <- data |>
     filter(person_id_secure == input$teacher_id) |> 
     distinct(person_id, group_id) |> 
     head(1)  # On prend le premier match si plusieurs
   
-  validate(need(nrow(secure_match) > 0, 
-               "Identifiant non reconnu. Vérifiez votre saisie (exemple: 01NS14-banane)"))
-  
-  # Ensuite filtrer toutes les données correspondant à ce person_id dans ce group_id
-  filtered_data <- data |> 
+  data |> 
     filter(
       person_id == secure_match$person_id,
       group_id == secure_match$group_id,
       score_value != -99
     )
-  
-  filtered_data
 })
+
+# 3. UI Controls ----
 
 # UI dynamique pour le choix d'échelle 
 output$scale_choices <- renderUI({
@@ -379,8 +399,14 @@ output$score_choices <- renderUI({
   )
 })
 
-# Enseignant - Plot des données
+# 4. Visualisations ----
+
+# Plot
 output$scale_plot <- renderPlotly({
+  if (is.null(input$teacher_id) || 
+     nchar(input$teacher_id) == 0 || 
+     !any(data$person_id_secure == input$teacher_id, na.rm = TRUE)) return(NULL)
+  
   req(teacher_data(), input$selected_scale, input$selected_scores)
   
   plot_data <- teacher_data() |> 
@@ -442,55 +468,60 @@ output$scale_plot <- renderPlotly({
   )
 })
 
-# Enseignant - Table des données
+## Table des données
 output$scale_table <- renderDT({
- req(teacher_data(), input$selected_scale, input$selected_scores)
- 
- table_data <- teacher_data() |> 
-   filter(
-     scale_label == input$selected_scale,
-     score_type_label %in% input$selected_scores
-   ) |> 
-   select(
-     timestamp,
-     score_type_label,
-     score_value,
-     reference_value, 
-     reference_sd,
-     quartile,
-     n_group
-   )
- 
- validate(need(nrow(table_data) > 0, "Aucune donnée à afficher"))
- 
- table_data |> 
-   rename(
-     "Date" = timestamp,
-     "Type de score" = score_type_label,
-     "Score personnel" = score_value,
-     "Moyenne du groupe" = reference_value,
-     "Écart-type" = reference_sd,
-     "Quartile" = quartile,
-     "N" = n_group
-   ) |> 
-   arrange(desc(`Date`)) |>   # Plus récent en premier
-   datatable(
-     options = list(
-       pageLength = 10,
-       dom = 't',
-       ordering = FALSE
-     ),
-     rownames = FALSE
-   )  |> 
-   formatRound(
-     columns = c("Score personnel", "Moyenne du groupe", "Écart-type"),
-     digits = 2
-   ) |>
-   formatDate(
-     columns = "Date",
-     method = "toLocaleDateString"
-   )
+  if (is.null(input$teacher_id) || 
+     nchar(input$teacher_id) == 0 || 
+     !any(data$person_id_secure == input$teacher_id, na.rm = TRUE)) return(NULL)
+  
+  req(teacher_data(), input$selected_scale, input$selected_scores)
+  
+  table_data <- teacher_data() |>
+    filter(
+      scale_label == input$selected_scale,
+      score_type_label %in% input$selected_scores
+      ) |> 
+    select(
+      timestamp,
+      score_type_label,
+      score_value,
+      reference_value, 
+      reference_sd,
+      quartile,
+      n_group
+      )
+  validate(need(nrow(table_data) > 0, "Aucune donnée à afficher"))
+  
+  table_data |> 
+    rename(
+      "Date" = timestamp,
+      "Type de score" = score_type_label,
+      "Score personnel" = score_value,
+      "Moyenne du groupe" = reference_value,
+      "Écart-type" = reference_sd,
+      "Quartile" = quartile,
+      "N" = n_group
+      ) |>
+    arrange(desc(`Date`)) |>
+    datatable(
+      options = list(
+        pageLength = 10,
+        dom = 't',
+        ordering = FALSE
+        ),
+      rownames = FALSE
+      ) |>
+    formatRound(
+      columns = c("Score personnel", "Moyenne du groupe", "Écart-type"),
+      digits = 2
+      ) |>
+    formatDate(
+      columns = "Date",
+      method = "toLocaleDateString"
+      )
 })
+
+# 5. Métriques ----
 
 output$Observations <- renderText({
   teacher_data() |> 
@@ -504,26 +535,49 @@ output$GroupeRef <- renderText({
     unique() |>
     first()
 })
+```
+
+<!-- Serveur - partie direction -->
+
+```{r}
+#| context: server
 
 # espace direction----
 
-# Données réactives pour le groupe
-group_data <- reactive({
+# 1. Validation et réactivité ----
+
+output$group_status <- renderUI({
   req(input$group_id)
-  validate(need(nchar(input$group_id) > 0, "Veuillez saisir un code établissement"))
+  valid_group_id <- any(data$group_id == input$group_id, na.rm = TRUE)
   
-  filtered_data <- data |>
-    filter(group_id == input$group_id)
-  
-  validate(need(nrow(filtered_data) > 0, "Aucune donnée pour cet établissement"))
-  
-  filtered_data
+  if(valid_group_id) {
+    tagList(
+      div(style = "color: green;", icon("check-circle"), "Code valide"),
+      # Mettre ici les éléments d'UI supplémentaires pour un groupe valide
+    )
+  } else {
+    div(style = "color: red;", icon("exclamation-circle"), 
+        "Code établissement non reconnu")
+  }
 })
 
-# Calcul des moyennes de référence (tous groupes)
+# 2. Données et calculs ----
+
+## Données filtrées par groupe
+
+group_data <- reactive({
+  req(input$group_id)
+  validate(need(nchar(input$group_id) > 0, ""))
+  validate(need(any(data$group_id == input$group_id, na.rm = TRUE), ""))
+  
+  # Filtrer les données
+  data |>
+    filter(group_id == input$group_id)
+})
+
+## Calcul des références
 reference_data <- reactive({
   req(group_data())
-  
   data |>
     group_by(month, scale_label, score_type_label) |>
     summarise(
@@ -534,7 +588,25 @@ reference_data <- reactive({
     )
 })
 
-# UI pour choix d'échelle
+## Calculs des moyennes de groupe (utilisé par plot et table)
+group_means <- reactive({
+  req(group_data(), input$selected_group_scale, input$selected_group_scores)
+  group_data() |>
+    filter(
+      scale_label == input$selected_group_scale,
+      score_type_label %in% input$selected_group_scores
+    ) |>
+    group_by(month, scale_label, score_type_label) |>
+    summarise(
+      group_mean = mean(score_value, na.rm = TRUE),
+      n_group = n(),
+      .groups = "drop"
+    )
+})
+
+# 3. UI Controls ----
+
+## UI pour choix d'échelle
 output$group_scale_choices <- renderUI({
   req(group_data())
   
@@ -546,7 +618,7 @@ output$group_scale_choices <- renderUI({
   )
 })
 
-# UI pour choix de scores
+## UI pour choix de scores et sous-scores
 output$group_score_choices <- renderUI({
   req(group_data(), input$selected_group_scale)
   
@@ -563,51 +635,67 @@ output$group_score_choices <- renderUI({
   )
 })
 
-# Plot des données de groupe
+# 4. Visualisations ----
+
+## Plot
 output$group_scale_plot <- renderPlotly({
-  req(group_data(), reference_data(), 
-      input$selected_group_scale, input$selected_group_scores)
+  if (is.null(input$group_id) || 
+     nchar(input$group_id) == 0 || 
+     !any(data$group_id == input$group_id, na.rm = TRUE)) return(NULL)
   
-  # Moyennes du groupe
-  group_means <- group_data() |>
-    filter(
-      scale_label == input$selected_group_scale,
-      score_type_label %in% input$selected_group_scores
-    ) |>
-    group_by(month, scale_label, score_type_label) |>
-    summarise(
-      group_mean = mean(score_value, na.rm = TRUE),
-      n_group = n(),
-      .groups = "drop"
-    )
+  req(group_means(), reference_data())
   
-  # Joindre avec les références
-  plot_data <- group_means |>
+  plot_data <- group_means() |>
     left_join(reference_data(), 
               by = c("month", "scale_label", "score_type_label"))
   
   validate(need(nrow(plot_data) > 0, "Aucune donnée à afficher"))
   
-  p <- plot_data |>
-    ggplot() +
-    # Ligne groupe
-    geom_line(aes(x = month, y = group_mean, 
-                  color = score_type_label)) +
-    geom_point(aes(x = month, y = group_mean, 
-                   color = score_type_label, 
-                   text = sprintf("N=%d", n_group))) +
-    # Ligne référence en pointillé FAIL
-    geom_hline(aes(yintercept = reference_value,
-                  color = score_type_label),
-              linetype = "dashed") +
+  reference_segments <- plot_data |>
+    group_by(month, score_type_label) |>
+    summarise(
+      reference_value = first(reference_value),
+      timestamp = min(as.Date(paste("01", month), format="%d %B %Y")),
+      start = floor_date(timestamp, "month"),
+      end = ceiling_date(timestamp, "month") - days(1),
+      .groups = "drop"
+      )
+  
+  plot_data <- plot_data |>
+    mutate(timestamp = as.Date(paste("01", month), format="%d %B %Y"))
+  
+  p <- ggplot() +
+    geom_segment(
+      data = reference_segments,
+      aes(x = start, xend = end,
+          y = reference_value, yend = reference_value,
+          color = score_type_label),
+      linetype = "dashed",
+      linewidth = 1
+    ) +
+    geom_line(
+      data = plot_data,
+      aes(x = timestamp, 
+          y = group_mean,
+          color = score_type_label),
+      linewidth = 1
+    ) +
+    geom_point(
+      data = plot_data,
+      aes(x = timestamp, 
+          y = group_mean,
+          color = score_type_label),
+      size = 3
+    ) +
     labs(
       x = "Période",
       y = "Score moyen",
       color = "Type de score"
     ) +
+    scale_x_date(date_labels = "%B %Y", date_breaks = "1 month") +
     theme_minimal()
     
-  ggplotly(p, tooltip = "text") |> 
+  ggplotly(p, tooltip = c("x","y","color")) |> 
     layout(
     paper_bgcolor = "rgba(0,0,0,0)", 
     plot_bgcolor = "rgba(0,0,0,0)",
@@ -625,33 +713,17 @@ output$group_scale_plot <- renderPlotly({
 
 # Table des données de groupe
 output$group_scale_table <- renderDT({
-  req(group_data(), reference_data(),
-      input$selected_group_scale, input$selected_group_scores)
+  if (is.null(input$group_id) || 
+     nchar(input$group_id) == 0 || 
+     !any(data$group_id == input$group_id, na.rm = TRUE)) return(NULL)
   
-  group_means <- group_data() |>
-    filter(
-      scale_label == input$selected_group_scale,
-      score_type_label %in% input$selected_group_scores
-    ) |>
-    group_by(month, scale_label, score_type_label) |>
-    summarise(
-      group_mean = mean(score_value, na.rm = TRUE),
-      n_group = n(),
-      .groups = "drop"
-    )
+  req(group_means(), reference_data())
   
-  table_data <- group_means |>
+  table_data <- group_means() |>
     left_join(reference_data(),
               by = c("month", "scale_label", "score_type_label")) |>
-    select(
-      month,
-      score_type_label,
-      group_mean,
-      reference_value,
-      reference_sd,
-      n_group,
-      n_total
-    )
+    select(month, score_type_label, group_mean, reference_value, 
+           reference_sd, n_group, n_total)
   
   validate(need(nrow(table_data) > 0, "Aucune donnée à afficher"))
   
@@ -679,196 +751,241 @@ output$group_scale_table <- renderDT({
       digits = 2
     )
 })
-# Nombre d'observations
+
+# 5. Métriques ----
+
+## Nombre d'observations
 output$GroupObservations <- renderText({
   group_data() |> 
     distinct(timestamp, person_id) |>  # On ne compte qu'une fois par mois et par personne
     nrow()
 })
 
-# Nombre d'utilisateurs uniques
+## Nombre d'utilisateurs uniques
 output$GroupUsers <- renderText({
   group_data() |>
     distinct(person_id) |>
     nrow()
 })
 
+```
+
+<!-- Serveur - partie chercheurs -->
+
+```{r}
+#| context: server
+
 # Espace recherche----
 
-output$researcher_status <- renderUI({
- req(input$researcher_id)
- valid_code <- any(data$researcher_id == input$researcher_id, na.rm = TRUE)
- 
- if(valid_code) {
-   tagList(
-     div(style = "color: green;", icon("check-circle"), "Code valide"),
-     
-     checkboxGroupInput("research_scales", "Échelles", 
-       choices = unique(data$scale_label),
-       selected = unique(data$scale_label)),
-     
-     checkboxGroupInput("research_groups", "Groupes",
-       choices = unique(data$group_id),
-       selected = unique(data$group_id)),
-     
-     checkboxGroupInput("research_status", "Statut",
-       choices = unique(data$status),
-       selected = unique(data$status)),
-       
-     checkboxGroupInput("research_gender", "Genre",
-       choices = unique(data$gender),
-       selected = unique(data$gender)),
-       
-     checkboxGroupInput("research_age", "Âge",
-       choices = unique(data$age),
-       selected = unique(data$age)),
-       
-     checkboxGroupInput("research_experience", "Expérience",
-       choices = unique(data$experience),
-       selected = unique(data$experience))
-   )
- } else {
-   div(style = "color: red;", icon("exclamation-circle"), "Code non reconnu")
- }
+# 1. Validation et réactivité ----
+
+valid_researcher <- reactive({
+  req(input$researcher_id)
+  validate(need(nchar(input$researcher_id) > 0, ""))
+  any(data$researcher_id == input$researcher_id, na.rm = TRUE)
 })
 
-filtered_research_data <- reactive({
-  req(input$researcher_id, input$research_scale, input$research_groups)
+output$researcher_status <- renderUI({
+  req(input$researcher_id)  # Assure que l'ID du chercheur est défini
   
-  data |>
+if(valid_researcher()) {
+    scales_default <- unique(data$scale_label)[1]
+    groups_default <- unique(data$group_id)[1]
+    status_default <- unique(data$status)[1]
+    experience_default <- unique(data$experience)[1]
+    gender_default <- unique(data$gender)[1]
+    age_default <- unique(data$age)[1]
+    
+    tagList(
+      div(style = "color: green;", icon("check-circle"), "Code valide"),
+      
+      selectInput("research_scales", "Échelles",
+                  choices = unique(data$scale_label),
+                  multiple = TRUE,
+                  selected = scales_default),
+      
+      selectInput("research_groups", "Groupes",
+                  choices = unique(data$group_id),
+                  multiple = TRUE,
+                  selected = groups_default),
+      
+      selectInput("research_status", "Status",
+                  choices = unique(data$status),
+                  multiple = TRUE,
+                  selected = status_default),
+      
+      selectInput("research_gender", "Genre",
+                  choices = unique(data$gender),
+                  multiple = TRUE,
+                  selected = gender_default),
+      
+      selectInput("research_age", "Age",
+                  choices = unique(data$age),
+                  multiple = TRUE,
+                  selected = age_default),
+      
+      uiOutput("experience_filter")
+
+    )
+  } else {
+    div(style = "color: red;", icon("exclamation-circle"), "Code non reconnu")
+  }
+})
+
+output$experience_filter <- renderUI({
+  req(input$research_status)
+  
+  if("En activité" %in% input$research_status) {
+    selectInput("research_experience", "Expérience",
+                choices = unique(data$experience[!is.na(data$experience)]),
+                multiple = TRUE,
+                selected = unique(data$experience[!is.na(data$experience)])[1])
+  }
+})
+
+# Observers pour maintenir au moins une sélection
+observe({
+  inputs <- c("research_scales", "research_groups", "research_status", 
+              "research_gender", "research_age")
+  
+  for(input_name in inputs) {
+    if(length(input[[input_name]]) == 0) {
+      updateSelectInput(session, input_name, 
+                       selected = unique(data[[gsub("research_", "", input_name)]])[1])
+    }
+  }
+  if (!is.null(input$research_experience) && length(input$research_experience) == 0) {
+    updateSelectInput(session, "research_experience",
+                     selected = unique(data$experience)[1])
+  }
+})
+
+# 2. Données et calculs ----
+
+## Données filtrées par groupe
+
+# Données filtrées
+filtered_research_data <- reactive({
+  if (!valid_researcher()) return(NULL)
+  validate(need(valid_researcher(), "Code chercheur invalide"))
+  
+  req(input$research_scales,
+      input$research_groups, 
+      input$research_status,
+      input$research_gender,
+      input$research_age
+      )
+  
+  filtered_data <- data |> 
     filter(
       researcher_id == input$researcher_id,
-      scale_label == input$research_scale,
-      group_id %in% input$research_groups
-    )
+      scale_label %in% input$research_scales,
+      group_id %in% input$research_groups,
+      status %in% input$research_status,
+      gender %in% input$research_gender,
+      age %in% input$research_age
+      )
+  if ("En activité" %in% input$research_status && !is.null(input$research_experience)) {
+    filtered_data <- filtered_data |>
+      filter(experience %in% input$research_experience)
+  }
+  
+  filtered_data
 })
 
-# Plots
+# 3. Visualisations ----
+
+## Plots
 
 output$research_plot <- renderPlotly({
- req(input$researcher_id,
-     input$research_scales,
-     input$research_groups)
- 
- p <- data |>
-   filter(
-     researcher_id == input$researcher_id,
-     scale_label %in% input$research_scales,
-     group_id %in% input$research_groups,
-     status %in% input$research_status,
-     gender %in% input$research_gender,
-     age %in% input$research_age,
-     experience %in% input$research_experience
-   ) |>
-   ggplot(aes(x = month, y = score_value, color = score_type_label)) +
-   geom_boxplot() +
-   facet_wrap(~scale_label, scales = "free_y") +
-   theme_minimal() +
-   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-   labs(x = "Mois", y = "Score", color = "Type de score") 
-   
- ggplotly(p) |> 
-   layout(
-    paper_bgcolor = "rgba(0,0,0,0)", 
-    plot_bgcolor = "rgba(0,0,0,0)",
-    font = list(color = "rgb(33, 37, 41)"),
-    xaxis = list(
-      gridcolor = "rgba(128,128,128,0.2)",
-      zerolinecolor = "rgba(128,128,128,0.2)"
-    ),
-    yaxis = list(
-      gridcolor = "rgba(128,128,128,0.2)", 
-      zerolinecolor = "rgba(128,128,128,0.2)"
-    )
-  )
+  if (is.null(filtered_research_data()) || nrow(filtered_research_data()) == 0) return(NULL)
+  validate(need(nrow(filtered_research_data()) > 0, "Aucune donnée à afficher"))
+
+  p <- filtered_research_data() |>
+    ggplot(aes(x = month, y = score_value, color = score_type_label)) +
+    geom_boxplot() +
+    facet_wrap(~scale_label, scales = "free_y") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(x = "Mois", y = "Score", color = "Type de score") 
+  
+  ggplotly(p) |> 
+    layout(
+      paper_bgcolor = "rgba(0,0,0,0)", 
+      plot_bgcolor = "rgba(0,0,0,0)",
+      font = list(color = "rgb(33, 37, 41)"),
+      xaxis = list(
+        gridcolor = "rgba(128,128,128,0.2)",
+        zerolinecolor = "rgba(128,128,128,0.2)"
+        ),
+      yaxis = list(
+        gridcolor = "rgba(128,128,128,0.2)", 
+        zerolinecolor = "rgba(128,128,128,0.2)"
+        )
+      )
 })
 
-# Résumé
+## Data Summary
 
 output$research_summary <- renderDT({
- req(input$researcher_id, 
-     input$research_scales,
-     input$research_groups,
-     input$research_status,
-     input$research_gender,
-     input$research_age,
-     input$research_experience)
- 
- data |>
-   filter(
-     researcher_id == input$researcher_id,
-     scale_label %in% input$research_scales,
-     group_id %in% input$research_groups,
-     status %in% input$research_status,
-     gender %in% input$research_gender,
-     age %in% input$research_age,
-     experience %in% input$research_experience
-   ) |>
-   group_by(scale_label, score_type_label) |>
-   summarise(
-     N = n(),
-     Moyenne = mean(score_value, na.rm = TRUE),
-     "Écart-type" = sd(score_value, na.rm = TRUE),
-     Min = min(score_value, na.rm = TRUE),
-     Max = max(score_value, na.rm = TRUE),
-     .groups = 'drop'
-   ) |>
-   datatable(
-     options = list(dom = 't'),
-     rownames = FALSE
-   ) |>
-   formatRound(columns = c("Moyenne", "Écart-type", "Min", "Max"), digits = 2)
+  if (is.null(filtered_research_data()) || nrow(filtered_research_data()) == 0) return(NULL)
+  validate(need(nrow(filtered_research_data()) > 0, "Aucune donnée à afficher"))
+
+  filtered_research_data() |>
+    group_by(scale_label, score_type_label) |>
+    summarise(
+      N = n(),
+      Moyenne = mean(score_value, na.rm = TRUE),
+      "Écart-type" = sd(score_value, na.rm = TRUE),
+      Min = min(score_value, na.rm = TRUE),
+      Max = max(score_value, na.rm = TRUE),
+      .groups = 'drop'
+      ) |>
+    datatable(
+      options = list(dom = 't'),
+      rownames = FALSE
+      ) |>
+    formatRound(columns = c("Moyenne", "Écart-type", "Min", "Max"), digits = 2)
 })
 
-# UI - Bouton de téléchargement au-dessus du tableau
+## Table
+output$research_table <- renderDT({
+  if (is.null(filtered_research_data()) || nrow(filtered_research_data()) == 0) return(NULL)
+  validate(need(nrow(filtered_research_data()) > 0, "Aucune donnée à afficher"))
+  
+  filtered_research_data() |>
+    datatable(
+      options = list(pageLength = 25, scrollX = TRUE),
+      rownames = FALSE
+      )
+})
+
+# 4. UI Controls ----
+
+## Fonction de téléchargement
 output$download_button <- renderUI({
- req(input$researcher_id, any(data$researcher_id == input$researcher_id, na.rm = TRUE))
- downloadButton("downloadData", "Télécharger les données filtrées")
+  req(valid_researcher(), filtered_research_data())
+  
+  if(nrow(filtered_research_data()) > 0) {
+    downloadButton("downloadData", 
+                  sprintf("Télécharger les données (%d observations)", 
+                         nrow(filtered_research_data())))
+  } else {
+    div(style = "color: #6c757d;",
+        icon("exclamation-circle"), 
+        "Aucune donnée disponible avec ces filtres")
+  }
 })
 
-# Server
+# Handler pour le téléchargement
 output$downloadData <- downloadHandler(
- filename = function() {
-   paste("research_data_", Sys.Date(), ".csv", sep = "")
- },
- content = function(file) {
-   filtered_data <- data |>
-     filter(
-       researcher_id == input$researcher_id,
-       scale_label %in% input$research_scales,
-       group_id %in% input$research_groups,
-       status %in% input$research_status,
-       gender %in% input$research_gender,
-       age %in% input$research_age,
-       experience %in% input$research_experience
-     )
-   write.csv(filtered_data, file, row.names = FALSE)
- }
+  filename = function() {
+    format(Sys.time(), "research_data_%Y%m%d_%H%M%S.csv")
+  },
+  content = function(file) {
+    write_csv(filtered_research_data(), file)
+  }
 )
 
-# Table
-output$research_table <- renderDT({
- req(input$researcher_id, 
-     input$research_scales, 
-     input$research_groups,
-     input$research_status,
-     input$research_gender,
-     input$research_age,
-     input$research_experience)
- 
- data |>
-   filter(
-     researcher_id == input$researcher_id,
-     scale_label %in% input$research_scales,
-     group_id %in% input$research_groups,
-     status %in% input$research_status,
-     gender %in% input$research_gender,
-     age %in% input$research_age,
-     experience %in% input$research_experience
-   ) |>
-   datatable(
-     options = list(pageLength = 25, scrollX = TRUE),
-     rownames = FALSE
-   )
-})
 ```
+
