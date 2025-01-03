@@ -139,7 +139,7 @@ textInput("teacher_id",
           "Votre identifiant personnel",
           placeholder = "Par exemple: 01NS14-artichaut")
 
-uiOutput("id_status")
+uiOutput("teacher_status")
 
 ```
 
@@ -297,6 +297,12 @@ uiOutput("researcher_status")
 
 ```
 
+```{r}
+#| title: "commandes"
+
+
+```
+
 
 ## {.tabset} 
 
@@ -333,30 +339,53 @@ DTOutput("research_table")
 
 # Espace enseignant----
 
-# Données réactives pour l'id de l'enseignant (même person_id dans le bon group_id)
+# 1. Validation et réactivité ----
+
+output$teacher_status <- renderUI({
+  req(input$teacher_id)
+  valid_teacher_id <- any(data$person_id_secure == input$teacher_id, na.rm = TRUE)
+  
+  if(valid_teacher_id) {
+    tagList(
+      div(style = "color: green;", icon("check-circle"), "Identifiant valide"),
+    )
+  } else {
+    div(style = "color: red;", icon("exclamation-circle"), 
+        "Identifiant non reconnu")
+  }
+})
+
+# 2. Données et calculs ----
+
+## Données réactives pour l'id de l'enseignant (même person_id dans le bon group_id)
 teacher_data <- reactive({
   req(input$teacher_id)
-  validate(need(nchar(input$teacher_id) > 0, "Veuillez saisir un identifiant"))
+  # Valider que l'ID n'est pas nul
   
+  validate(need(nchar(input$teacher_id) > 0, ""))
+  
+  # Valider que l'ID existe dans les données
+  validate(need(
+    any(data$person_id_secure == input$teacher_id, na.rm = TRUE),
+    ""
+  ))
+
   # D'abord trouver le matching avec l'ID sécurisé pour obtenir person_id et group_id
-  secure_match <- data |> 
+  secure_match <- data |>
     filter(person_id_secure == input$teacher_id) |> 
     distinct(person_id, group_id) |> 
     head(1)  # On prend le premier match si plusieurs
   
-  validate(need(nrow(secure_match) > 0, 
-               "Identifiant non reconnu. Vérifiez votre saisie (exemple: 01NS14-banane)"))
-  
   # Ensuite filtrer toutes les données correspondant à ce person_id dans ce group_id
-  filtered_data <- data |> 
+  data |> 
     filter(
       person_id == secure_match$person_id,
       group_id == secure_match$group_id,
       score_value != -99
     )
-  
-  filtered_data
 })
+
+# 3. UI Controls ----
 
 # UI dynamique pour le choix d'échelle 
 output$scale_choices <- renderUI({
@@ -387,11 +416,14 @@ output$score_choices <- renderUI({
   )
 })
 
-# Enseignant - Plot des données
+# 4. Visualisations ----
+
+# Plot
 output$scale_plot <- renderPlotly({
   if (is.null(input$teacher_id) || 
      nchar(input$teacher_id) == 0 || 
      !any(data$person_id_secure == input$teacher_id, na.rm = TRUE)) return(NULL)
+  
   req(teacher_data(), input$selected_scale, input$selected_scores)
   
   plot_data <- teacher_data() |> 
@@ -453,7 +485,7 @@ output$scale_plot <- renderPlotly({
   )
 })
 
-# Enseignant - Table des données
+## Table des données
 output$scale_table <- renderDT({
   if (is.null(input$teacher_id) || 
      nchar(input$teacher_id) == 0 || 
@@ -506,6 +538,8 @@ output$scale_table <- renderDT({
       )
 })
 
+# 5. Métriques ----
+
 output$Observations <- renderText({
   teacher_data() |> 
     distinct(timestamp) |>
@@ -531,9 +565,9 @@ output$GroupeRef <- renderText({
 
 output$group_status <- renderUI({
   req(input$group_id)
-  valid_id <- any(data$group_id == input$group_id, na.rm = TRUE)
+  valid_group_id <- any(data$group_id == input$group_id, na.rm = TRUE)
   
-  if(valid_id) {
+  if(valid_group_id) {
     tagList(
       div(style = "color: green;", icon("check-circle"), "Code valide"),
       # Mettre ici les éléments d'UI supplémentaires pour un groupe valide
@@ -648,8 +682,7 @@ output$group_scale_plot <- renderPlotly({
     geom_line(aes(x = month, y = group_mean, 
                   color = score_type_label)) +
     geom_point(aes(x = month, y = group_mean, 
-                   color = score_type_label, 
-                   text = sprintf("N=%d", n_group))) +
+                   color = score_type_label)) +
     # Ligne référence en pointillé FAIL
     geom_hline(aes(yintercept = reference_value,
                   color = score_type_label),
@@ -661,7 +694,9 @@ output$group_scale_plot <- renderPlotly({
     ) +
     theme_minimal()
     
-  ggplotly(p, tooltip = "text") |> 
+  ggplotly(p, tooltip = c("x","y","color"
+                          )
+           ) |> 
     layout(
     paper_bgcolor = "rgba(0,0,0,0)", 
     plot_bgcolor = "rgba(0,0,0,0)",
@@ -745,82 +780,130 @@ output$GroupUsers <- renderText({
 
 # 1. Validation et réactivité ----
 
-output$researcher_status <- renderUI({
- req(input$researcher_id)
- valid_code <- any(data$researcher_id == input$researcher_id, na.rm = TRUE)
- 
- if(valid_code) {
-   tagList(
-     div(style = "color: green;", icon("check-circle"), "Code valide"),
-     
-     checkboxGroupInput("research_scales", "Échelles", 
-       choices = unique(data$scale_label),
-       selected = unique(data$scale_label)),
-     
-     checkboxGroupInput("research_groups", "Groupes",
-       choices = unique(data$group_id),
-       selected = unique(data$group_id)),
-     
-     checkboxGroupInput("research_status", "Statut",
-       choices = unique(data$status),
-       selected = unique(data$status)),
-       
-     checkboxGroupInput("research_gender", "Genre",
-       choices = unique(data$gender),
-       selected = unique(data$gender)),
-       
-     checkboxGroupInput("research_age", "Âge",
-       choices = unique(data$age),
-       selected = unique(data$age)),
-       
-     checkboxGroupInput("research_experience", "Expérience",
-       choices = unique(data$experience),
-       selected = unique(data$experience))
-   )
- } else {
-   div(style = "color: red;", icon("exclamation-circle"), "Code non reconnu")
- }
+valid_researcher <- reactive({
+  req(input$researcher_id)
+  any(data$researcher_id == input$researcher_id, na.rm = TRUE)
 })
+
+output$researcher_status <- renderUI({
+  req(input$researcher_id)  # Assure que l'ID du chercheur est défini
+  
+if(valid_researcher()) {
+    scales_default <- unique(data$scale_label)[1]
+    groups_default <- unique(data$group_id)[1]
+    status_default <- unique(data$status)[1]
+    experience_default <- unique(data$experience)[1]
+    gender_default <- unique(data$gender)[1]
+    age_default <- unique(data$age)[1]
+    
+    tagList(
+      div(style = "color: green;", icon("check-circle"), "Code valide"),
+      
+      selectInput("research_scales", "Échelles",
+                  choices = unique(data$scale_label),
+                  multiple = TRUE,
+                  selected = scales_default),
+      
+      selectInput("research_groups", "Groupes",
+                  choices = unique(data$group_id),
+                  multiple = TRUE,
+                  selected = groups_default),
+      
+      selectInput("research_status", "Status",
+                  choices = unique(data$status),
+                  multiple = TRUE,
+                  selected = status_default),
+      
+      selectInput("research_gender", "Genre",
+                  choices = unique(data$gender),
+                  multiple = TRUE,
+                  selected = gender_default),
+      
+      selectInput("research_age", "Age",
+                  choices = unique(data$age),
+                  multiple = TRUE,
+                  selected = age_default)
+    )
+  } else {
+    div(style = "color: red;", icon("exclamation-circle"), "Code non reconnu")
+  }
+})
+
+# Observers pour maintenir au moins une sélection
+observe({
+  if(length(input$research_scales) == 0) {
+    updateSelectInput(session, "research_scales", 
+                     selected = unique(data$scale_label)[1])
+  }
+})
+
+observe({
+  if(length(input$research_groups) == 0) {
+    updateSelectInput(session, "research_groups", 
+                     selected = unique(data$group_id)[1])
+  }
+})
+
+observe({
+  if(length(input$research_status) == 0) {
+    updateSelectInput(session, "research_status", 
+                     selected = unique(data$status)[1])
+  }
+})
+
+observe({
+  if(length(input$research_gender) == 0) {
+    updateSelectInput(session, "research_gender", 
+                     selected = unique(data$gender)[1])
+  }
+})
+
+observe({
+  if(length(input$research_age) == 0) {
+    updateSelectInput(session, "research_age", 
+                     selected = unique(data$age)[1])
+  }
+})
+
 
 # 2. Données et calculs ----
 
 ## Données filtrées par groupe
 
+# Données filtrées
 filtered_research_data <- reactive({
-  req(input$researcher_id, input$research_scale, input$research_groups)
-  
-  data |>
-    filter(
-      researcher_id == input$researcher_id,
-      scale_label == input$research_scale,
-      group_id %in% input$research_groups
-    )
-})
-
-# 3. Visualisations ----
-
-## Plots
-
-output$research_plot <- renderPlotly({
-  if (is.null(input$researcher_id) || 
-     nchar(input$researcher_id) == 0 || 
-     !any(data$researcher_id == input$researcher_id, na.rm = TRUE)) return(NULL)
-  
-  req(input$researcher_id,
+  req(valid_researcher(),
       input$research_scales,
-      input$research_groups
-      )
-   
-  p <- data |>
+      input$research_groups, 
+      input$research_status,
+      input$research_gender,
+      input$research_age)
+  
+  data |> 
     filter(
       researcher_id == input$researcher_id,
       scale_label %in% input$research_scales,
       group_id %in% input$research_groups,
       status %in% input$research_status,
       gender %in% input$research_gender,
-      age %in% input$research_age,
-      experience %in% input$research_experience
-      ) |>
+      age %in% input$research_age
+    )
+})
+
+
+# 3. Visualisations ----
+
+## Plots
+
+output$research_plot <- renderPlotly({
+   data_filtered <- filtered_research_data()
+  
+  if (is.null(input$researcher_id) || 
+     nchar(input$researcher_id) == 0 || 
+     !any(data$researcher_id == input$researcher_id, na.rm = TRUE) ||
+     nrow(data_filtered) == 0) return(NULL)
+   
+  p <- data_filtered |>
     ggplot(aes(x = month, y = score_value, color = score_type_label)) +
     geom_boxplot() +
     facet_wrap(~scale_label, scales = "free_y") +
@@ -847,92 +930,75 @@ output$research_plot <- renderPlotly({
 ## Data Summary
 
 output$research_summary <- renderDT({
- req(input$researcher_id, 
-     input$research_scales,
-     input$research_groups,
-     input$research_status,
-     input$research_gender,
-     input$research_age,
-     input$research_experience)
- 
- data |>
-   filter(
-     researcher_id == input$researcher_id,
-     scale_label %in% input$research_scales,
-     group_id %in% input$research_groups,
-     status %in% input$research_status,
-     gender %in% input$research_gender,
-     age %in% input$research_age,
-     experience %in% input$research_experience
-   ) |>
-   group_by(scale_label, score_type_label) |>
-   summarise(
-     N = n(),
-     Moyenne = mean(score_value, na.rm = TRUE),
-     "Écart-type" = sd(score_value, na.rm = TRUE),
-     Min = min(score_value, na.rm = TRUE),
-     Max = max(score_value, na.rm = TRUE),
-     .groups = 'drop'
-   ) |>
-   datatable(
-     options = list(dom = 't'),
-     rownames = FALSE
-   ) |>
-   formatRound(columns = c("Moyenne", "Écart-type", "Min", "Max"), digits = 2)
+
+  data_filtered <- filtered_research_data()
+  
+  if (is.null(input$researcher_id) || 
+     nchar(input$researcher_id) == 0 || 
+     !any(data$researcher_id == input$researcher_id, na.rm = TRUE) ||
+     nrow(data_filtered) == 0) return(NULL)
+  
+  
+  data_filtered |>
+    group_by(scale_label, score_type_label) |>
+    summarise(
+      N = n(),
+      Moyenne = mean(score_value, na.rm = TRUE),
+      "Écart-type" = sd(score_value, na.rm = TRUE),
+      Min = min(score_value, na.rm = TRUE),
+      Max = max(score_value, na.rm = TRUE),
+      .groups = 'drop'
+      ) |>
+    datatable(
+      options = list(dom = 't'),
+      rownames = FALSE
+      ) |>
+    formatRound(columns = c("Moyenne", "Écart-type", "Min", "Max"), digits = 2)
 })
 
 ## Table
 output$research_table <- renderDT({
- req(input$researcher_id, 
-     input$research_scales, 
-     input$research_groups,
-     input$research_status,
-     input$research_gender,
-     input$research_age,
-     input$research_experience)
- 
- data |>
-   filter(
-     researcher_id == input$researcher_id,
-     scale_label %in% input$research_scales,
-     group_id %in% input$research_groups,
-     status %in% input$research_status,
-     gender %in% input$research_gender,
-     age %in% input$research_age,
-     experience %in% input$research_experience
-   ) |>
-   datatable(
-     options = list(pageLength = 25, scrollX = TRUE),
-     rownames = FALSE
-   )
+  
+  data_filtered <- filtered_research_data()
+  
+  if (is.null(input$researcher_id) || 
+     nchar(input$researcher_id) == 0 || 
+     !any(data$researcher_id == input$researcher_id, na.rm = TRUE) ||
+     nrow(data_filtered) == 0) return(NULL)
+  
+
+  data_filtered |>
+    datatable(
+      options = list(pageLength = 25, scrollX = TRUE),
+      rownames = FALSE
+      )
 })
 
 # 4. UI Controls ----
 
 ## Fonction de téléchargement
 output$download_button <- renderUI({
- req(input$researcher_id, any(data$researcher_id == input$researcher_id, na.rm = TRUE))
- downloadButton("downloadData", "Télécharger les données filtrées")
+  req(valid_researcher(), filtered_research_data())
+  
+  if(nrow(filtered_research_data()) > 0) {
+    downloadButton("downloadData", 
+                  sprintf("Télécharger les données (%d observations)", 
+                         nrow(filtered_research_data())))
+  } else {
+    div(style = "color: #6c757d;",
+        icon("exclamation-circle"), 
+        "Aucune donnée disponible avec ces filtres")
+  }
 })
 
+# Handler pour le téléchargement
 output$downloadData <- downloadHandler(
- filename = function() {
-   paste("research_data_", Sys.Date(), ".csv", sep = "")
- },
- content = function(file) {
-   filtered_data <- data |>
-     filter(
-       researcher_id == input$researcher_id,
-       scale_label %in% input$research_scales,
-       group_id %in% input$research_groups,
-       status %in% input$research_status,
-       gender %in% input$research_gender,
-       age %in% input$research_age,
-       experience %in% input$research_experience
-     )
-   write.csv(filtered_data, file, row.names = FALSE)
- }
+  filename = function() {
+    format(Sys.time(), "research_data_%Y%m%d_%H%M%S.csv")
+  },
+  content = function(file) {
+    write_csv(filtered_research_data(), file)
+  }
 )
-
 ```
 
