@@ -844,14 +844,22 @@ output$experience_filter <- renderUI({
 })
 
 # Observers pour maintenir au moins une sélection
+input_to_column <- c(
+  "research_scales" = "scale_label",
+  "research_groups" = "group_id", 
+  "research_status" = "status",
+  "research_gender" = "gender",
+  "research_age" = "age"
+)
+
 observe({
-  inputs <- c("research_scales", "research_groups", "research_status", 
-              "research_gender", "research_age")
+  inputs <- names(input_to_column)
   
   for(input_name in inputs) {
     if(length(input[[input_name]]) == 0) {
-      updateSelectInput(session, input_name, 
-                       selected = unique(data[[gsub("research_", "", input_name)]])[1])
+      updateSelectInput(session, 
+                       input_name,
+                       selected = unique(data[[input_to_column[input_name]]])[1])
     }
   }
   if (!is.null(input$research_experience) && length(input$research_experience) == 0) {
