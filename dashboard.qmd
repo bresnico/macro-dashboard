@@ -822,10 +822,24 @@ if(valid_researcher()) {
       selectInput("research_age", "Age",
                   choices = unique(data$age),
                   multiple = TRUE,
-                  selected = age_default)
+                  selected = age_default),
+      
+      uiOutput("experience_filter")
+
     )
   } else {
     div(style = "color: red;", icon("exclamation-circle"), "Code non reconnu")
+  }
+})
+
+output$experience_filter <- renderUI({
+  req(input$research_status)
+  
+  if("En activité" %in% input$research_status) {
+    selectInput("research_experience", "Expérience",
+                choices = unique(data$experience[!is.na(data$experience)]),
+                multiple = TRUE,
+                selected = unique(data$experience[!is.na(data$experience)])[1])
   }
 })
 
@@ -839,6 +853,10 @@ observe({
       updateSelectInput(session, input_name, 
                        selected = unique(data[[gsub("research_", "", input_name)]])[1])
     }
+  }
+  if (!is.null(input$research_experience) && length(input$research_experience) == 0) {
+    updateSelectInput(session, "research_experience",
+                     selected = unique(data$experience)[1])
   }
 })
 
@@ -858,7 +876,7 @@ filtered_research_data <- reactive({
       input$research_age
       )
   
-  data |> 
+  filtered_data <- data |> 
     filter(
       researcher_id == input$researcher_id,
       scale_label %in% input$research_scales,
@@ -867,6 +885,12 @@ filtered_research_data <- reactive({
       gender %in% input$research_gender,
       age %in% input$research_age
       )
+  if ("En activité" %in% input$research_status && !is.null(input$research_experience)) {
+    filtered_data <- filtered_data |>
+      filter(experience %in% input$research_experience)
+  }
+  
+  filtered_data
 })
 
 # 3. Visualisations ----
