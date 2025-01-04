@@ -53,6 +53,9 @@ main <- function(survey_id, credentials) {
   status <- "✅ Succès"
   error_msg <- NULL
   n_rows <- 0
+  n_scales <- 0
+  n_scores <- 0
+  n_administration <- 0
   
   tryCatch({
     log_info("\nDémarrage du traitement")
@@ -77,6 +80,18 @@ main <- function(survey_id, credentials) {
     log_info("\nCalcul des scores")
     scales_data <- prepare_all_scales_scores(std_data, config)
     n_rows <- nrow(scales_data)
+    # Nombre d'échelles prises en compte
+    n_scales <- scales_data |> 
+      distinct(scale_label) |> 
+      nrow()
+    # Nombre de scores différents calculés, basé sur scale_label et score_type_label
+    n_scores <- scales_data |> 
+      distinct(scale_label, score_type_label) |> 
+      nrow()
+    # Nombre de passations basées sur person_id_secure et timestamp
+    n_administration <- scales_data |> 
+      distinct(person_id_secure, timestamp) |> 
+      nrow()
     log_info(glue("\nCalcul terminé: {n_rows} lignes"))
     log_info("\nPréparation des données démographiques")
     demographics_data <- process_demographics(std_data, config)
@@ -131,6 +146,9 @@ main <- function(survey_id, credentials) {
 Status: {status}
 Temps d'exécution: {duration}
 Observations: {n_rows}
+Echelles: {n_scales}
+Scores: {n_scores}
+Passations: {n_administration}
 {if(!is.null(error_msg)) paste('Erreur:', error_msg) else ''}
     ")
     
