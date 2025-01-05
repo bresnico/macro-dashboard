@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-Cette plateforme est un outil de monitorage en temps réel du développement professionnel des enseignants, basé sur des échelles d'évaluation scientifiquement validées. Le système utilise Quarto et Shiny pour créer un dashboard interactif permettant différentes vues selon le profil utilisateur.
+Cette plateforme est un outil de monitorage en temps réel du développement professionnel des enseignant·es, basé sur des échelles d'évaluation scientifiquement validées. Le système utilise Quarto et Shiny pour créer un dashboard interactif permettant différentes vues selon le profil utilisateur.
 
 ### Objectifs principaux
 - Permettre aux enseignants de suivre leur développement professionnel
