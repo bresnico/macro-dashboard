@@ -1,5 +1,5 @@
 # Configuration globale
-fake_data: false  # Mettre à false pour utiliser l'API LimeSurvey réelle
+fake_data: false
 identification:
   personal_id:
     group: "g01"
