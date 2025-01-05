@@ -106,26 +106,38 @@ list(
 
 ```
 
-## Row {height=70%}
+## Row {height=20%}
+
+::: {.card title="En quelques mots"}
+Description de la fonction et du but de la plateforme de suivi du développement professionnel.
+:::
+
+## Row {height=50% .tabset}
 
 ```{r}
 #| echo: false
 #| output: asis
 
 scales_list <- data |> 
-  select(scale_label) |> 
-  distinct() |> 
-  pull() |> 
-  sort()
+  distinct(scale, scale_label, score_type_label, scale_description, scale_reference) |> 
+  arrange()
 
-# Créer des cartes en colonnes
-cat("::: {.grid}\n\n")
+unique_scales <- unique(scales_list[c("scale", "scale_label", "scale_description", "scale_reference")])
 
-for(scale in scales_list) {
-  cat(sprintf("::: {.g-col-4}\n::: {.card}\n%s\n:::\n:::\n\n", scale))
+# Pour chaque échelle, générer le contenu complet
+for(i in 1:nrow(unique_scales)) {
+  # Obtenir les scores pour cette échelle
+  scores <- scales_list$score_type_label[scales_list$scale == unique_scales$scale[i]]
+  
+  # Générer le texte complet avec description et référence
+  cat(sprintf("::: {.card title=\"%s\"}\n%s\n\nScores mesurés :\n\n%s\n\nDescription :\n\n%s\n\nRéférence :\n\n%s\n:::\n\n",
+      unique_scales$scale[i],
+      unique_scales$scale_label[i],
+      paste("- ", scores, collapse = "\n"),
+      unique_scales$scale_description[i],
+      unique_scales$scale_reference[i]))
 }
 
-cat(":::\n")
 ```
 
 # Espace profs

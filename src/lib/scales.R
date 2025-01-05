@@ -128,6 +128,8 @@ prepare_all_scales_scores <- function(data, config, debug = FALSE) {
         tibble(
           scale = scale_name,
           scale_label = scale_config$label,
+          scale_description = scale_config$description,
+          scale_reference = scale_config$reference,
           score_type = subscale_name,
           score_type_label = label
         )
@@ -140,6 +142,8 @@ prepare_all_scales_scores <- function(data, config, debug = FALSE) {
       total_label <- tibble(
         scale = scale_name,
         scale_label = scale_config$label,
+        scale_description = scale_config$description,
+        scale_reference = scale_config$reference,
         score_type = "total_score",
         score_type_label = "Score global"
       )
@@ -162,6 +166,8 @@ prepare_all_scales_scores <- function(data, config, debug = FALSE) {
       group_id,
       scale,
       scale_label,
+      scale_description,
+      scale_reference,
       score_type,
       score_type_label,
       score_value,
