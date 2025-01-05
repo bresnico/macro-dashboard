@@ -70,6 +70,8 @@ scales:
   tses:
     id: "g06"
     label: "Teacher Self-Efficacy Scale"
+    description: "texte de description de TSES"
+    reference: "texte de référence bibliographique de TSES"
     type: "likert_9"
     response_prefix: "AO0"
     items:
@@ -112,6 +114,8 @@ scales:
   tes:
     id: "g07"
     label: "Teacher emotion scale (TES)"
+    description: "texte de description de TES"
+    reference: "texte de référence bibliographique de TES"
     type: "likert_4"
     response_prefix: "AO0"
     items:
@@ -154,6 +158,8 @@ scales:
   smbm:
     id: "g08"
     label: "Subjective Mother Beats Merlin (SMBM)"
+    description: "texte de description de SMBM"
+    reference: "texte de référence bibliographique de SMBM"
     type: "likert_7"
     response_prefix: "AO0"
     items:
@@ -200,6 +206,8 @@ scales:
   cps:
     id: "g09"
     label: "Compétences psychosociales (CPS)"
+    description: "texte de description de CPS"
+    reference: "texte de référence bibliographique de CPS"
     type: "likert_7"
     response_prefix: "AO0"
     items:
@@ -251,6 +259,8 @@ scales:
   twbi:
     id: "g10"
     label: "Teacher Wellbeing index (TWBI)"
+    description: "texte de description de TWBI"
+    reference: "texte de référence bibliographique de TWBI"
     type: "likert_6"
     response_prefix: "AO0"
     items:
