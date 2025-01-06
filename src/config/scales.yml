@@ -71,7 +71,7 @@ scales:
     id: "g06"
     label: "Teacher Self-Efficacy Scale"
     description: "texte de description de TSES"
-    reference: "texte de référence bibliographique de TSES"
+    reference: "texte de référence bibliographique de TSES aux normes APA7"
     type: "likert_9"
     response_prefix: "AO0"
     items:
