@@ -67,7 +67,7 @@ update_time <- survey_data$update_time
 
 ```{r}
 #| content: "valuebox"
-#| title: "Nombre d'observations complètes saisies"
+#| title: "Nombre total d'observations"
 
 list(
 icon = "pencil-fill", 
@@ -81,7 +81,7 @@ value = data |>
 
 ```{r}
 #| content: "valuebox"
-#| title: "Nombre de groupes impliqués"
+#| title: "Nombre total de groupes"
 
 list(
 icon = "house", 
@@ -145,7 +145,7 @@ for(i in 1:nrow(unique_scales)) {
 ## Row {height=30%}
 
 ```{r}
-#| title: "identification"
+#| title: "Identification"
 
 textInput("teacher_id", 
           "Votre identifiant personnel",
@@ -158,7 +158,7 @@ uiOutput("teacher_status")
 
 ```{r}
 value_box(
-  title = "Nombre de saisies concernées",
+  title = "Nombre d'observations",
   value = textOutput("Observations"),
   showcase = bs_icon("pencil-fill")
 
@@ -227,7 +227,7 @@ DTOutput("scale_table")
 ## Row {height=30%}
 
 ```{r}
-#| title: "identification"
+#| title: "Identification"
 textInput("group_id", 
           "Code de l'établissement",
           placeholder = "Par exemple: un")
@@ -246,7 +246,7 @@ value_box(
 
 ```{r}
 value_box(
-  title = "Nombre d'utilisateurs",
+  title = "Nombre de personnes",
   value = textOutput("GroupUsers"),
   showcase = bs_icon("people-fill")
 
