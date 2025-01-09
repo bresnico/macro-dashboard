@@ -282,7 +282,7 @@ Chaque vue propose :
 Pour toute question technique :
 1. Consulter les logs dans /logs/process.log
 2. Vérifier la configuration dans /src/config
-3. Contacter l'équipe de développement
+3. Contacter l'équipe de choc de développement
 
 ## Licence
 
