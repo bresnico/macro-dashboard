@@ -42,11 +42,12 @@ process_single_scale <- function(data, scale_name, config, debug = TRUE) {
     mutate(
       person_id = clean_teacher_id(g01q13),   # ID nettoyé pour les agrégations 
       person_id_secure = g01q13,              # ID complet pour l'interface      
-      group_id = groupecode,
+      group_id = groupecode,           # Maintenir pour compatibilité
+      subgroup_id = ifelse(is.na(grouperef) | grouperef == "", "all", grouperef),  # Nouveau avec valeur par défaut
       timestamp = ymd_hms(datestamp),
       month = floor_date(timestamp, "month")
     ) %>%
-    select(timestamp, month, person_id, person_id_secure, group_id, all_of(item_ids))
+    select(timestamp, month, person_id, person_id_secure, group_id, subgroup_id, all_of(item_ids))
   
   # Calcul des scores individuels
   if(scale_config$scoring$total) {
@@ -81,24 +82,34 @@ process_single_scale <- function(data, scale_name, config, debug = TRUE) {
   
   # Identification des colonnes de scores
   score_columns <- setdiff(names(scores_data), 
-                           c("timestamp", "month", "person_id", "person_id_secure", "group_id", item_ids))
+                           c("timestamp", "month", "person_id", "person_id_secure", "group_id", "subgroup_id", item_ids))
   
   # Préparation du format long avec scores de référence
   scores_long <- scores_data %>%
-    select(timestamp, month, person_id, person_id_secure, group_id, all_of(score_columns)) %>%
+    select(timestamp, month, person_id, person_id_secure, group_id, subgroup_id, all_of(score_columns)) %>%
     pivot_longer(
       cols = all_of(score_columns),
       names_to = "score_type",
       values_to = "score_value"
     ) %>%
-    # Ajout des scores de référence par groupe et par mois
+    # Calcul des références au niveau du sous-groupe
+    group_by(group_id, subgroup_id, month, score_type) %>%
+    mutate(
+      subgroup_reference = mean(score_value[score_value != -99], na.rm = TRUE),
+      subgroup_sd = sd(score_value[score_value != -99], na.rm = TRUE),
+      subgroup_n = sum(score_value != -99, na.rm = TRUE)
+    ) %>%
+    ungroup() %>%
+    # Calcul des références au niveau du groupe principal
     group_by(group_id, month, score_type) %>%
     mutate(
-      reference_value = mean(score_value, na.rm = TRUE),
-      reference_sd = sd(score_value, na.rm = TRUE),
-      quartile = ntile(score_value, 4),  # Calcul du quartile
-      scale = scale_name,
-      n_group = n()
+      group_reference = mean(score_value[score_value != -99], na.rm = TRUE),
+      group_sd = sd(score_value[score_value != -99], na.rm = TRUE),
+      group_n = sum(score_value != -99, na.rm = TRUE),
+      quartile = ifelse(score_value != -99, 
+                        ntile(score_value, 4), 
+                        NA),
+      scale = scale_name
     ) %>%
     ungroup()
   
@@ -124,7 +135,7 @@ prepare_all_scales_scores <- function(data, config, debug = FALSE) {
     subscore_labels <- NULL
     if(!is.null(scale_config$scoring$subscales)) {
       subscore_labels <- map_dfr(names(scale_config$scoring$subscales), function(subscale_name) {
-        label <- scale_config$scoring$subscales[[subscale_name]]$label  # Correction ici!
+        label <- scale_config$scoring$subscales[[subscale_name]]$label
         tibble(
           scale = scale_name,
           scale_label = scale_config$label,
@@ -152,18 +163,19 @@ prepare_all_scales_scores <- function(data, config, debug = FALSE) {
     bind_rows(subscore_labels, total_label)
   })
   
-  # Reste de la fonction inchangé...
+  # Traitement de toutes les échelles
   all_scores <- map_dfr(scale_names, ~process_single_scale(data, .x, config, debug = debug))
   
   final_scores <- all_scores %>%
     left_join(scale_labels, by = c("scale", "score_type")) %>%
-    arrange(timestamp, group_id, person_id, scale, score_type) %>%
+    arrange(timestamp, group_id, subgroup_id, person_id, scale, score_type) %>%
     select(
       timestamp,
       month,
       person_id,
       person_id_secure,
       group_id,
+      subgroup_id,
       scale,
       scale_label,
       scale_description,
@@ -171,10 +183,13 @@ prepare_all_scales_scores <- function(data, config, debug = FALSE) {
       score_type,
       score_type_label,
       score_value,
-      reference_value,
-      reference_sd,
-      quartile,
-      n_group
+      subgroup_reference,  # Nouvelle colonne
+      subgroup_sd,         # Nouvelle colonne
+      subgroup_n,          # Nouvelle colonne
+      group_reference,     # Renommé de reference_value
+      group_sd,           # Renommé de reference_sd
+      group_n,            # Renommé de n_group
+      quartile
     )
   
   # Transformation finale pour assurer des types corrects
@@ -185,14 +200,16 @@ prepare_all_scales_scores <- function(data, config, debug = FALSE) {
       month = format(month, "%B %Y"),
       
       # S'assurer que tous les scores sont numériques
-      across(c(score_value, reference_value, reference_sd), 
+      across(c(score_value, 
+               subgroup_reference, subgroup_sd,
+               group_reference, group_sd), 
              ~as.numeric(.x)),
       
-      # Quartile doit être un entier
-      quartile = as.integer(quartile),
+      # Compteurs en entiers
+      across(c(subgroup_n, group_n), as.integer),
       
-      # S'assurer que n_group est un entier
-      n_group = as.integer(n_group)
+      # Quartile doit être un entier
+      quartile = as.integer(quartile)
     )
   
   return(final_scores)

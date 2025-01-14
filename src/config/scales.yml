@@ -319,7 +319,7 @@ scales:
         reversed: false
     scoring:
       total: false
-    subscales:
+      subscales:
         ambiguite_role:
           label: "Ambiguïté des Rôles"
           items: ["g17q27sq001", "g17q27sq002", "g17q27sq003", "g17q27sq004"]
@@ -399,19 +399,19 @@ scales:
       subscales:
         extraversion:
           label: "Extraversion"
-          items: ["g19q19sq001", "g19q19sq006"]
+          items: ["g19q29sq001", "g19q29sq006"]
         agrableness:
           label: "Agréabilité"
-          items: ["g19q19sq002", "g19q19sq007"]
+          items: ["g19q29sq002", "g19q29sq007"]
         conscientiousness:
           label: "Conscienciosité"
-          items: ["g19q19sq003", "g19q19sq008"]
+          items: ["g19q29sq003", "g19q29sq008"]
         stab_em:
           label: "Stabilité"
-          items: ["g19q19sq004", "g19q19sq009"]
+          items: ["g19q29sq004", "g19q29sq009"]
         openness:
           label: "Ouverture"
-          items: ["g19q19sq005", "g19q19sq010"]
+          items: ["g19q29sq005", "g19q29sq010"]
   twbsworkload:
     id: "g20"
     label: "Charge de travail (TWBS Workload)"
@@ -434,25 +434,25 @@ scales:
         reversed: false
     scoring:
       total: false
-    subscales:
-      notes:
-        label: "Notes"
-        items: ["g20q30sq001"]
-      temps:
-        label: "Temps"
-        items: ["g20q30sq002"]
-      admin:
-        label: "Admin"
-        items: ["g20q30sq003"]
-      reunions:
-        label: "Réunions"
-        items: ["g20q30sq004"]
-      extrajob:
-        label: "Extra Job"
-        items: ["g20q30sq005"]
-      cours:
-        label: "Cours"
-        items: ["g20q30sq006"]
+      subscales:
+        notes:
+          label: "Notes"
+          items: ["g20q30sq001"]
+        temps:
+          label: "Temps"
+          items: ["g20q30sq002"]
+        admin:
+          label: "Admin"
+          items: ["g20q30sq003"]
+        reunions:
+          label: "Réunions"
+          items: ["g20q30sq004"]
+        extrajob:
+          label: "Extra Job"
+          items: ["g20q30sq005"]
+        cours:
+          label: "Cours"
+          items: ["g20q30sq006"]
   uwes:
     id: "g21"
     label: "Engagement professionnel (UWES)"

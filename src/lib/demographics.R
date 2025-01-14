@@ -25,7 +25,8 @@ process_demographics <- function(data, config) {
     mutate(
       person_id = clean_teacher_id(g01q13),
       person_id_secure = g01q13,
-      group_id = groupecode,
+      group_id = groupecode,           # Maintenir pour compatibilité
+      subgroup_id = grouperef,         # Nouveau
       timestamp = as.Date(ymd_hms(datestamp)),
       month = format(timestamp, "%B %Y"),
       # Conversion des codes en labels pour chaque variable démographique
@@ -34,7 +35,7 @@ process_demographics <- function(data, config) {
       status = recode(!!sym(demographic_fields$status$id), !!!demographic_fields$status$mapping),
       experience = recode(!!sym(demographic_fields$experience$id), !!!demographic_fields$experience$mapping)
     ) %>%
-    select(timestamp, month, person_id_secure, group_id, age, gender, status, experience)
+    select(timestamp, month, person_id_secure, group_id, subgroup_id, age, gender, status, experience)
   
   return(demographics_data)
 }
