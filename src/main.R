@@ -24,7 +24,7 @@ log_info <- function(msg) {
 
 # Fonction de gestion des labels de groupes et sous-groupes
 
-get_group_labels <- function() {
+get_group_labels <- function(groups_config) {
 
   # Création d'une liste pour les labels de groupes
   group_labels <- tibble(
@@ -75,7 +75,7 @@ send_telegram_notification <- function(message, bot_token, chat_id) {
 }
 
 # Pipeline principal
-main <- function(survey_id, credentials) {
+main <- function(survey_id, credentials, groups_config) {
   start_time <- Sys.time()
   status <- "✅ Succès"
   error_msg <- NULL
@@ -133,14 +133,15 @@ main <- function(survey_id, credentials) {
           "person_id_secure",
           "timestamp", 
           "month",
-          "group_id"
+          "group_id",
+          "subgroup_id"
         )
       )
     log_info("\nJointure terminée")
     
     # 5. Ajout des labels de groupe
     log_info("\nAjout des labels de groupe")
-    labels_data <- get_group_labels()
+    labels_data <- get_group_labels(groups_config)
     processed_data <- processed_data %>%
       left_join(
         labels_data$group_labels,
@@ -204,4 +205,4 @@ Passations: {n_administration}
 }
 
 # Exécution
-main(survey_id, credentials)
+main(survey_id, credentials, groups_config)

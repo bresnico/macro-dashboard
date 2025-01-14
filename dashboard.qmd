@@ -170,11 +170,18 @@ value_box(
 ```{r}
 value_box(
   title = "Groupe de référence",
-  value = textOutput("GroupeRef"),
+  value = textOutput("GroupRef"),
   showcase = bs_icon("house")
 )
 ```
 
+```{r}
+value_box(
+  title = "Sous-groupe de référence",
+  value = textOutput("SubgroupRef"),
+  showcase = bs_icon("house")
+)
+```
 
 ```{r}
 #| content: "valuebox"
@@ -430,7 +437,7 @@ output$scale_plot <- renderPlotly({
   reference_segments <- plot_data |> 
     group_by(month, score_type_label) |> 
     summarise(
-      reference_value = first(reference_value),
+      subgroup_reference = first(subgroup_reference),
       start = floor_date(min(timestamp), "month"),
       end = ceiling_date(min(timestamp), "month") - days(1),
       .groups = "drop"
@@ -442,7 +449,7 @@ output$scale_plot <- renderPlotly({
     geom_segment(
       data = reference_segments,
       aes(x = start, xend = end,
-          y = reference_value, yend = reference_value,
+          y = subgroup_reference, yend = subgroup_reference,
           color = score_type_label),
       linewidth = 1
     ) +
@@ -497,10 +504,13 @@ output$scale_table <- renderDT({
       timestamp,
       score_type_label,
       score_value,
-      reference_value, 
-      reference_sd,
+      subgroup_reference,
+      subgroup_sd,
+      subgroup_n,
+      group_reference,
+      group_sd,
       quartile,
-      n_group
+      group_n
       )
   validate(need(nrow(table_data) > 0, "Aucune donnée à afficher"))
   
@@ -509,10 +519,13 @@ output$scale_table <- renderDT({
       "Date" = timestamp,
       "Type de score" = score_type_label,
       "Score personnel" = score_value,
-      "Moyenne du groupe" = reference_value,
-      "Écart-type" = reference_sd,
+      "Moyenne du sous-groupe" = subgroup_reference,
+      "Écart-type du sous-groupe" = subgroup_sd,
+      "N du sous-groupe" = subgroup_n,
+      "Moyenne du groupe" = group_reference,
+      "Écart-type du groupe" = group_sd,
       "Quartile" = quartile,
-      "N" = n_group
+      "N du groupe" = group_n
       ) |>
     arrange(desc(`Date`)) |>
     datatable(
@@ -524,7 +537,7 @@ output$scale_table <- renderDT({
       rownames = FALSE
       ) |>
     formatRound(
-      columns = c("Score personnel", "Moyenne du groupe", "Écart-type"),
+      columns = c("Score personnel", "Moyenne du sous-groupe", "Écart-type du sous-groupe", "Moyenne du groupe", "Écart-type du groupe"),
       digits = 2
       ) |>
     formatDate(
@@ -541,9 +554,16 @@ output$Observations <- renderText({
     nrow()
 })
 
-output$GroupeRef <- renderText({
+output$GroupRef <- renderText({
   teacher_data() |> 
-    pull(group_id) |>
+    pull(group_label) |>
+    unique() |>
+    first()
+})
+
+output$SubgroupRef <- renderText({
+  teacher_data() |> 
+    pull(subgroup_label) |>
     unique() |>
     first()
 })
