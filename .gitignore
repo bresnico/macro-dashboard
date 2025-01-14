@@ -32,9 +32,7 @@ _freeze/
 .env
 .Renviron
 credentials.yml
-config/credentials.yml
-groups.yaml
-config/groups.yml
+groups.yml
 
 # Dependencies
 renv/library/
