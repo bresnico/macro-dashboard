@@ -86,7 +86,8 @@ process_single_scale <- function(data, scale_name, config, debug = TRUE) {
   
   # Préparation du format long avec scores de référence
   scores_long <- scores_data %>%
-    select(timestamp, month, person_id, person_id_secure, group_id, subgroup_id, all_of(score_columns)) %>%
+    select(timestamp, month, person_id, person_id_secure, 
+           group_id, subgroup_id, all_of(score_columns)) %>%
     pivot_longer(
       cols = all_of(score_columns),
       names_to = "score_type",
@@ -95,23 +96,45 @@ process_single_scale <- function(data, scale_name, config, debug = TRUE) {
     # Calcul des références au niveau du sous-groupe
     group_by(group_id, subgroup_id, month, score_type) %>%
     mutate(
-      subgroup_reference = mean(score_value[score_value != -99], na.rm = TRUE),
-      subgroup_sd = sd(score_value[score_value != -99], na.rm = TRUE),
-      subgroup_n = sum(score_value != -99, na.rm = TRUE)
+      subgroup_n = sum(score_value != -99, na.rm = TRUE),
+      # Calculs statistiques seulement si n ≥ 10
+      subgroup_reference = if(subgroup_n >= 10) {
+        mean(score_value[score_value != -99], na.rm = TRUE)
+      } else {
+        NA_real_
+      },
+      subgroup_sd = if(subgroup_n >= 10) {
+        sd(score_value[score_value != -99], na.rm = TRUE)
+      } else {
+        NA_real_
+      }
     ) %>%
     ungroup() %>%
     # Calcul des références au niveau du groupe principal
     group_by(group_id, month, score_type) %>%
     mutate(
-      group_reference = mean(score_value[score_value != -99], na.rm = TRUE),
-      group_sd = sd(score_value[score_value != -99], na.rm = TRUE),
       group_n = sum(score_value != -99, na.rm = TRUE),
-      quartile = ifelse(score_value != -99, 
-                        ntile(score_value, 4), 
-                        NA),
+      # Calculs statistiques seulement si n ≥ 10
+      group_reference = if(group_n >= 10) {
+        mean(score_value[score_value != -99], na.rm = TRUE)
+      } else {
+        NA_real_
+      },
+      group_sd = if(group_n >= 10) {
+        sd(score_value[score_value != -99], na.rm = TRUE)
+      } else {
+        NA_real_
+      },
+      # Quartiles seulement si n ≥ 10
+      quartile = if(group_n >= 10) {
+        ntile(score_value[score_value != -99], 4)
+      } else {
+        NA_integer_
+      },
       scale = scale_name
     ) %>%
     ungroup()
+  
   
   if(debug) {
     cat("\nNombre d'observations:", nrow(scores_long))
