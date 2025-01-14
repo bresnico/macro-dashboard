@@ -67,142 +67,6 @@ scale_types:
     max_value: 9
 
 scales:
-  tses:
-    id: "g06"
-    label: "Teacher Self-Efficacy Scale"
-    description: "texte de description de TSES"
-    reference: "texte de référence bibliographique de TSES aux normes APA7"
-    type: "likert_9"
-    response_prefix: "AO0"
-    items:
-      - id: "g06q18sq001"
-        reversed: false
-      - id: "g06q18sq002"
-        reversed: false
-      - id: "g06q18sq003"
-        reversed: false
-      - id: "g06q18sq004"
-        reversed: false
-      - id: "g06q18sq005"
-        reversed: false
-      - id: "g06q18sq006"
-        reversed: false
-      - id: "g06q18sq007"
-        reversed: false
-      - id: "g06q18sq008"
-        reversed: false
-      - id: "g06q18sq009"
-        reversed: false
-      - id: "g06q18sq010"
-        reversed: false
-      - id: "g06q18sq011"
-        reversed: false
-      - id: "g06q18sq012"
-        reversed: false
-    scoring:
-      total: true
-      subscales:
-        student_engagement:
-          label: "Engagement des élèves"
-          items: ["g06q18sq002", "g06q18sq003", "g06q18sq004", "g06q18sq011"]
-        instructional_strategies:
-          label: "Stratégies d'enseignement"
-          items: ["g06q18sq005", "g06q18sq009", "g06q18sq010", "g06q18sq012"]
-        classroom_management:
-          label: "Gestion de classe"
-          items: ["g06q18sq001", "g06q18sq006", "g06q18sq007", "g06q18sq008"]
-  tes:
-    id: "g07"
-    label: "Teacher emotion scale (TES)"
-    description: "texte de description de TES"
-    reference: "texte de référence bibliographique de TES"
-    type: "likert_4"
-    response_prefix: "AO0"
-    items:
-      - id: "g07q19sq001"
-        reversed: false
-      - id: "g07q19sq002"
-        reversed: false
-      - id: "g07q19sq003"
-        reversed: false
-      - id: "g07q19sq004"
-        reversed: false
-      - id: "g07q19sq005"
-        reversed: false
-      - id: "g07q19sq006"
-        reversed: false
-      - id: "g07q19sq007"
-        reversed: false
-      - id: "g07q19sq008"
-        reversed: false
-      - id: "g07q19sq009"
-        reversed: false
-      - id: "g07q19sq010"
-        reversed: false
-      - id: "g07q19sq011"
-        reversed: false
-      - id: "g07q19sq012"
-        reversed: false
-    scoring:
-      total: false
-      subscales:
-        joie:
-          label: "Joie"
-          items: ["g07q19sq001", "g07q19sq002", "g07q19sq003", "g07q19sq004"]
-        colere:
-          label: "Colère"
-          items: ["g07q19sq005", "g07q19sq006", "g07q19sq007", "g07q19sq008"]
-        anxiete:
-          label: "Anxiété"
-          items: ["g07q19sq009", "g07q19sq010", "g07q19sq011", "g07q19sq012"]
-  smbm:
-    id: "g08"
-    label: "Subjective Mother Beats Merlin (SMBM)"
-    description: "texte de description de SMBM"
-    reference: "texte de référence bibliographique de SMBM"
-    type: "likert_7"
-    response_prefix: "AO0"
-    items:
-      - id: "g08q20sq001"
-        reversed: false
-      - id: "g08q20sq002"
-        reversed: false
-      - id: "g08q20sq003"
-        reversed: false
-      - id: "g08q20sq004"
-        reversed: false
-      - id: "g08q20sq005"
-        reversed: false
-      - id: "g08q20sq006"
-        reversed: false
-      - id: "g08q20sq007"
-        reversed: false
-      - id: "g08q20sq008"
-        reversed: false
-      - id: "g08q20sq009"
-        reversed: false
-      - id: "g08q20sq010"
-        reversed: false
-      - id: "g08q20sq011"
-        reversed: false
-      - id: "g08q20sq012"
-        reversed: false
-      - id: "g08q20sq013"
-        reversed: false
-      - id: "g08q20sq014"
-        reversed: false
-    scoring:
-      total: true
-      subscales:
-        fatigue_physique:
-          label: "Fatigue physique"
-          items: ["g08q20sq001", "g08q20sq002", "g08q20sq003", "g08q20sq004","g08q20sq005","g08q20sq006"]
-        lassitude_cognitive:
-          label: "Lassitude cognitive"
-          items: ["g08q20sq007", "g08q20sq008", "g08q20sq009", "g08q20sq010","g08q20sq011"]
-        epuisement_emotionnel:
-          label: "Epuisement émotionnel"
-          items: ["g08q20sq012", "g08q20sq013", "g08q20sq014"]
   cps:
     id: "g09"
     label: "Compétences psychosociales (CPS)"
@@ -256,9 +120,490 @@ scales:
         competences_emotionnelles:
           label: "Compétences émotionnelles"
           items: ["g09q21sq011", "g09q21sq012", "g09q21sq013", "g09q21sq014","g09q21sq015"]
+  erq:
+    id: "g12"
+    label: "Régulation émotionnelle (ERQ)"
+    description: "description ERQ"
+    reference: "référence ERQ"
+    type: "likert_7"
+    response_prefix: "AO0"
+    items:
+      - id: "g12q22sq001"
+        reversed: false
+      - id: "g12q22sq002"
+        reversed: false
+      - id: "g12q22sq003"
+        reversed: false
+      - id: "g12q22sq004"
+        reversed: false
+      - id: "g12q22sq005"
+        reversed: false
+      - id: "g12q22sq006"
+        reversed: false
+      - id: "g12q22sq007"
+        reversed: false
+      - id: "g12q22sq008"
+        reversed: false
+      - id: "g12q22sq009"
+        reversed: false
+      - id: "g12q22sq010"
+        reversed: false
+    scoring:
+      total: false
+      subscales:
+        suppression:
+          label: "Suppression émotionnelle"
+          items: ["g12q22sq002", "g12q22sq004", "g12q22sq006", "g12q22sq009"]
+        reevaluation:
+          label: "Réévaluation émotionnelle"
+          items:  ["g12q22sq001", "g12q22sq003", "g12q22sq005", "g12q22sq007", "g12q22sq008", "g12q22sq010"]
+  schoolclim:
+    id: "g13"
+    label: "Climat scolaire (SchoolClim)"
+    description: "texte de description de SchoolClim"
+    reference: "texte de référence bibliographique de SchoolClim"
+    type: "likert_5"
+    response_prefix: "AO0"
+    items:
+      - id: "g13q23sq001"
+        reversed: true
+      - id: "g13q23sq002"
+        reversed: false
+      - id: "g13q23sq003"
+        reversed: true
+      - id: "g13q23sq004"
+        reversed: false
+      - id: "g13q23sq005"
+        reversed: true
+      - id: "g13q23sq006"
+        reversed: false
+      - id: "g13q23sq007"
+        reversed: false
+      - id: "g13q23sq008"
+        reversed: false
+      - id: "g13q23sq009"
+        reversed: false
+      - id: "g13q23sq010"
+        reversed: false
+      - id: "g13q23sq011"
+        reversed: true
+      - id: "g13q23sq012"
+        reversed: true
+      - id: "g13q23sq013"
+        reversed: false
+      - id: "g13q23sq014"
+        reversed: false
+      - id: "g13q23sq015"
+        reversed: false
+      - id: "g13q23sq016"
+        reversed: true
+      - id: "g13q23sq017"
+        reversed: true
+      - id: "g13q23sq018"
+        reversed: false
+      - id: "g13q23sq019"
+        reversed: false
+      - id: "g13q23sq020"
+        reversed: false
+      - id: "g13q23sq021"
+        reversed: true
+    scoring:
+      total: true
+      subscales:
+        collaboration:
+          label: "Collaboration"
+          items: ["g13q23sq001", "g13q23sq002", "g13q23sq003", "g13q23sq004", "g13q23sq005", "g13q23sq006"]
+        student_relations:
+          label: "Relation avec les élèves"
+          items: ["g13q23sq007", "g13q23sq008", "g13q23sq009", "g13q23sq010"]
+        school_ressources:
+          label: "Ressources de l'école"
+          items: ["g13q23sq011", "g13q23sq012", "g13q23sq013", "g13q23sq014"]
+        decision_making:
+          label: "Participation aux décisions"
+          items: ["g13q23sq015", "g13q23sq016", "g13q23sq017"]
+        instructional_innovation:
+          label: "Innovation pédagogique"
+          items: ["g13q23sq018", "g13q23sq019", "g13q23sq020", "g13q23sq021"]
+  hiersupp:
+    id: "g14"
+    label: "Soutien de la hiérarchie (HierSupp)"
+    description: "description HierSupp"
+    reference: "référence HierSupp"
+    type: "likert_5"
+    response_prefix: "AO0"
+    items:
+      - id: "g14q24sq001"
+        reversed: false
+      - id: "g14q24sq002"
+        reversed: false
+      - id: "g14q24sq003"
+        reversed: false
+      - id: "g14q24sq004"
+        reversed: false 
+      - id: "g14q24sq005"
+        reversed: true 
+      - id: "g14q24sq006"
+        reversed: false 
+      - id: "g14q24sq007"
+        reversed: false 
+      - id: "g14q24sq008"
+        reversed: true 
+    scoring:
+      total: true
+  valcons:
+    id: "g15"
+    label: "Consonance des Valeurs (ValCons)"
+    description: "description ValCons"
+    reference: "référence ValCons"
+    type: "likert_6"
+    response_prefix: "AO0"
+    items:
+      - id: "g15q25sq001"
+        reversed: false
+      - id: "g15q25sq002"
+        reversed: false
+      - id: "g15q25sq003"
+        reversed: false
+    scoring:
+      total: true
+  psm:
+    id: "g16"
+    label: "Motivation des élèves (PSM)"
+    description: "description PSM"
+    reference: "référence PSM"
+    type: "likert_7"
+    response_prefix: "AO0"
+    items:
+      - id: "g16q26sq001"
+        reversed: false
+      - id: "g16q26sq002"
+        reversed: false
+      - id: "g16q26sq003"
+        reversed: false
+      - id: "g16q26sq004"
+        reversed: false
+      - id: "g16q26sq005"
+        reversed: true
+      - id: "g16q26sq006"
+        reversed: true
+      - id: "g16q26sq007"
+        reversed: false
+    scoring:
+      total: true
+  rs:
+    id: "g17"
+    label: "Rôles et Organisation (RS)"
+    description: "description RS"
+    reference: "référence RS"
+    type: "likert_7"
+    response_prefix: "AO0"
+    items:
+      - id: "g17q27sq001"
+        reversed: true
+      - id: "g17q27sq002"
+        reversed: true
+      - id: "g17q27sq003"
+        reversed: true
+      - id: "g17q27sq004"
+        reversed: true
+      - id: "g17q27sq005"
+        reversed: false
+      - id: "g17q27sq006"
+        reversed: false
+      - id: "g17q27sq007"
+        reversed: false
+      - id: "g17q27sq008"
+        reversed: false
+      - id: "g17q27sq009"
+        reversed: false
+    scoring:
+      total: false
+    subscales:
+        ambiguite_role:
+          label: "Ambiguïté des Rôles"
+          items: ["g17q27sq001", "g17q27sq002", "g17q27sq003", "g17q27sq004"]
+        conflit_role:
+          label: "Conflit de Rôles"
+          items: ["g17q27sq005","g17q27sq006","g17q27sq007"]
+        surcharge_role:
+          label: "Surcharge des Rôles"
+          items: ["g17q27sq008", "g17q27sq009"]
+  wfc:
+    id: "g18"
+    label: "Vie Privée / Travail (WFC)"
+    description: "description WFC"
+    reference: "référence WFC"
+    type: "likert_7"
+    response_prefix: "AO0"
+    items:
+      - id: "g18q28sq001"
+        reversed: false
+      - id: "g18q28sq002"
+        reversed: false
+      - id: "g18q28sq003"
+        reversed: false
+      - id: "g18q28sq004"
+        reversed: false
+      - id: "g18q28sq005"
+        reversed: false
+      - id: "g18q28sq006"
+        reversed: false
+      - id: "g18q28sq007"
+        reversed: false
+      - id: "g18q28sq008"
+        reversed: false
+      - id: "g18q28sq009"
+        reversed: false
+      - id: "g18q28sq010"
+        reversed: false
+    scoring:
+      total: false
+      subscales:
+        work_family_conflict_scale:
+          label: "Conflits Travail - Vie Privée"
+          items: ["g18q28sq001","g18q28sq002","g18q28sq003","g18q28sq004","g18q28sq005"]
+        family_work_conflict_scale:
+          label: "Conflits Vie Privée - Travail"
+          items: ["g18q28sq006","g18q28sq007","g18q28sq008","g18q28sq009","g18q28sq010"]
+  tipi:
+    id: "g19"
+    label: "Personnalité (TIPI)"
+    description: "texte de description de TIPI"
+    reference: "texte de référence bibliographique de TIPI"
+    type: "likert_7"
+    response_prefix: "AO0"
+    items:
+      - id: "g19q29sq001"
+        reversed: false
+      - id: "g19q29sq002"
+        reversed: true
+      - id: "g19q29sq003"
+        reversed: false
+      - id: "g19q29sq004"
+        reversed: true
+      - id: "g19q29sq005"
+        reversed: false
+      - id: "g19q29sq006"
+        reversed: true
+      - id: "g19q29sq007"
+        reversed: false
+      - id: "g19q29sq008"
+        reversed: true
+      - id: "g19q29sq009"
+        reversed: false
+      - id: "g19q29sq010"
+        reversed: true
+    scoring:
+      total: false
+      subscales:
+        extraversion:
+          label: "Extraversion"
+          items: ["g19q19sq001", "g19q19sq006"]
+        agrableness:
+          label: "Agréabilité"
+          items: ["g19q19sq002", "g19q19sq007"]
+        conscientiousness:
+          label: "Conscienciosité"
+          items: ["g19q19sq003", "g19q19sq008"]
+        stab_em:
+          label: "Stabilité"
+          items: ["g19q19sq004", "g19q19sq009"]
+        openness:
+          label: "Ouverture"
+          items: ["g19q19sq005", "g19q19sq010"]
+  twbsworkload:
+    id: "g20"
+    label: "Charge de travail (TWBS Workload)"
+    description: "texte de description de TWBS Workload"
+    reference: "texte de référence bibliographique de TWBS Workload"
+    type: "likert_7"
+    response_prefix: "AO0"
+    items:
+      - id: "g20q30sq001"
+        reversed: false
+      - id: "g20q30sq002"
+        reversed: false
+      - id: "g20q30sq003"
+        reversed: false
+      - id: "g20q30sq004"
+        reversed: false
+      - id: "g20q30sq005"
+        reversed: false
+      - id: "g20q30sq006"
+        reversed: false
+    scoring:
+      total: false
+    subscales:
+      notes:
+        label: "Notes"
+        items: ["g20q30sq001"]
+      temps:
+        label: "Temps"
+        items: ["g20q30sq002"]
+      admin:
+        label: "Admin"
+        items: ["g20q30sq003"]
+      reunions:
+        label: "Réunions"
+        items: ["g20q30sq004"]
+      extrajob:
+        label: "Extra Job"
+        items: ["g20q30sq005"]
+      cours:
+        label: "Cours"
+        items: ["g20q30sq006"]
+  uwes:
+    id: "g21"
+    label: "Engagement professionnel (UWES)"
+    description: "texte de description de UWES"
+    reference: "texte de référence bibliographique de UWES"
+    type: "likert_7"
+    response_prefix: "AO0"
+    items:
+      - id: "g21q31sq001"
+        reversed: false
+      - id: "g21q31sq002"
+        reversed: false
+      - id: "g21q31sq003"
+        reversed: false
+      - id: "g21q31sq004"
+        reversed: false
+      - id: "g21q31sq005"
+        reversed: false
+      - id: "g21q31sq006"
+        reversed: false
+      - id: "g21q31sq007"
+        reversed: false
+      - id: "g21q31sq008"
+        reversed: false
+      - id: "g21q31sq009"
+        reversed: false
+    scoring:
+      total: true
+      subscales:
+        vigor:
+          label: "Vigueur"
+          items: ["g21q31sq001", "g21q31sq002", "g21q31sq003"]
+        dedication:
+          label: "Dévouement"
+          items: ["g21q31sq004", "g21q31sq005", "g21q31sq006"]
+        absorption:
+          label: "Absorption cognitive"
+          items: ["g21q31sq007", "g21q31sq008", "g21q31sq009"]
+  tes:
+    id: "g07"
+    label: "Emotions professionnelles (TES)"
+    description: "texte de description de TES"
+    reference: "texte de référence bibliographique de TES"
+    type: "likert_4"
+    response_prefix: "AO0"
+    items:
+      - id: "g07q19sq001"
+        reversed: false
+      - id: "g07q19sq002"
+        reversed: false
+      - id: "g07q19sq003"
+        reversed: false
+      - id: "g07q19sq004"
+        reversed: false
+      - id: "g07q19sq005"
+        reversed: false
+      - id: "g07q19sq006"
+        reversed: false
+      - id: "g07q19sq007"
+        reversed: false
+      - id: "g07q19sq008"
+        reversed: false
+      - id: "g07q19sq009"
+        reversed: false
+      - id: "g07q19sq010"
+        reversed: false
+      - id: "g07q19sq011"
+        reversed: false
+      - id: "g07q19sq012"
+        reversed: false
+    scoring:
+      total: false
+      subscales:
+        joie:
+          label: "Joie"
+          items: ["g07q19sq001", "g07q19sq002", "g07q19sq003", "g07q19sq004"]
+        colere:
+          label: "Colère"
+          items: ["g07q19sq005", "g07q19sq006", "g07q19sq007", "g07q19sq008"]
+        anxiete:
+          label: "Anxiété"
+          items: ["g07q19sq009", "g07q19sq010", "g07q19sq011", "g07q19sq012"]
+  smbm:
+    id: "g08"
+    label: "Epuisement professionnel (SMBM)"
+    description: "texte de description de SMBM"
+    reference: "texte de référence bibliographique de SMBM"
+    type: "likert_7"
+    response_prefix: "AO0"
+    items:
+      - id: "g08q20sq001"
+        reversed: false
+      - id: "g08q20sq002"
+        reversed: false
+      - id: "g08q20sq003"
+        reversed: false
+      - id: "g08q20sq004"
+        reversed: false
+      - id: "g08q20sq005"
+        reversed: false
+      - id: "g08q20sq006"
+        reversed: false
+      - id: "g08q20sq007"
+        reversed: false
+      - id: "g08q20sq008"
+        reversed: false
+      - id: "g08q20sq009"
+        reversed: false
+      - id: "g08q20sq010"
+        reversed: false
+      - id: "g08q20sq011"
+        reversed: false
+      - id: "g08q20sq012"
+        reversed: false
+      - id: "g08q20sq013"
+        reversed: false
+      - id: "g08q20sq014"
+        reversed: false
+    scoring:
+      total: true
+      subscales:
+        fatigue_physique:
+          label: "Fatigue physique"
+          items: ["g08q20sq001", "g08q20sq002", "g08q20sq003", "g08q20sq004","g08q20sq005","g08q20sq006"]
+        lassitude_cognitive:
+          label: "Lassitude cognitive"
+          items: ["g08q20sq007", "g08q20sq008", "g08q20sq009", "g08q20sq010","g08q20sq011"]
+        epuisement_emotionnel:
+          label: "Epuisement émotionnel"
+          items: ["g08q20sq012", "g08q20sq013", "g08q20sq014"]
+  pss4:
+    id: "g22"
+    label: "Stress (PSS4)"
+    description: "texte de description de PSS4"
+    reference: "texte de référence bibliographique de PSS4"
+    type: "likert_5"
+    response_prefix: "AO0"
+    items:
+      - id: "g22q32sq001"
+        reversed: false
+      - id: "g22q32sq002"
+        reversed: true
+      - id: "g22q32sq003"
+        reversed: true
+      - id: "g22q32sq004"
+        reversed: false
+    scoring:
+      total: true
   twbi:
     id: "g10"
-    label: "Teacher Wellbeing index (TWBI)"
+    label: "Bien-être Enseignant (TWBI)"
     description: "texte de description de TWBI"
     reference: "texte de référence bibliographique de TWBI"
     type: "likert_6"
@@ -311,7 +656,7 @@ scales:
           label: "Bien-être physique"
           items: ["g10q22sq001", "g10q22sq002", "g10q22sq003", "g10q22sq004"]
         emotional_psychological_wellbeing:
-          label: "Bien-être émotionnel et psychologique"
+          label: "Bien-être émotionnel"
           items: ["g10q22sq005", "g10q22sq006", "g10q22sq007", "g10q22sq008"]
         cognitive_wellbeing:
           label: "Bien-être cognitif"
@@ -322,21 +667,169 @@ scales:
         spiritual_wellbeing:
           label: "Bien-être spirituel"
           items: ["g10q22sq017", "g10q22sq018", "g10q22sq019", "g10q22sq020"]
-
+  tss:
+    id: "g23"
+    label: "Satisfaction professionnelle (TSS)"
+    description: "Description TSS"
+    reference: "Référence APA TSS"
+    type: "likert_5"
+    response_prefix: "AO0"
+    items:
+      - id: "g23q33sq001"
+        reversed: false
+      - id: "g23q33sq002"
+        reversed: false
+      - id: "g23q33sq003"
+        reversed: false
+      - id: "g23q33sq004"
+        reversed: false
+      - id: "g23q33sq005"
+        reversed: false
+    scoring:
+      total: true
+  pers:
+    id: "g24"
+    label: "Persévérance dans le métier (PERS)"
+    description: "Description PERS"
+    reference: "Source APA PERS"
+    type: "likert_7"
+    response_prefix: "AO0"
+    items:
+      - id: "g24q34sq001"
+        reversed: true
+      - id: "g24q34sq002"
+        reversed: false
+      - id: "g24q34sq003"
+        reversed: false
+      - id: "g24q34sq004"
+        reversed: false
+      - id: "g24q34sq005"
+        reversed: false
+      - id: "g24q34sq006"
+        reversed: false
+      - id: "g24q34sq007"
+        reversed: true
+      - id: "g24q34sq008"
+        reversed: false
+      - id: "g24q34sq009"
+        reversed: true
+      - id: "g24q34sq010"
+        reversed: true
+    scoring:
+      total: true
+  tsesvalls:
+    id: "g06"
+    label: "Efficacité perçue (TSES Valls)"
+    description: "texte de description de TSES Valls"
+    reference: "texte de référence bibliographique de TSES Valls aux normes APA7"
+    type: "likert_9"
+    response_prefix: "AO0"
+    items:
+      - id: "g06q18sq001"
+        reversed: false
+      - id: "g06q18sq002"
+        reversed: false
+      - id: "g06q18sq003"
+        reversed: false
+      - id: "g06q18sq004"
+        reversed: false
+      - id: "g06q18sq005"
+        reversed: false
+      - id: "g06q18sq006"
+        reversed: false
+      - id: "g06q18sq007"
+        reversed: false
+      - id: "g06q18sq008"
+        reversed: false
+      - id: "g06q18sq009"
+        reversed: false
+      - id: "g06q18sq010"
+        reversed: false
+      - id: "g06q18sq011"
+        reversed: false
+      - id: "g06q18sq012"
+        reversed: false
+    scoring:
+      total: true
+      subscales:
+        student_engagement:
+          label: "Efficacité à engaer les élèves"
+          items: ["g06q18sq002", "g06q18sq003", "g06q18sq004", "g06q18sq011"]
+        instructional_strategies:
+          label: "Efficacité des stratégies pédagogiques"
+          items: ["g06q18sq005", "g06q18sq009", "g06q18sq010", "g06q18sq012"]
+        classroom_management:
+          label: "Efficacité dans la gestion de classe"
+          items: ["g06q18sq001", "g06q18sq006", "g06q18sq007", "g06q18sq008"]
+  ocq:
+    id: "g25"
+    label: "Attachement organisationnel OCQ"
+    description: "texte de description de OCQ"
+    reference: "texte de référence bibliographique de OCQ aux normes APA7"
+    type: "likert_7"
+    response_prefix: "AO0"
+    items:
+      - id: "g25q35sq001"
+        reversed: false
+      - id: "g25q35sq002"
+        reversed: false
+      - id: "g25q35sq003"
+        reversed: false
+      - id: "g25q35sq004"
+        reversed: false
+      - id: "g25q35sq005"
+        reversed: false
+      - id: "g25q35sq006"
+        reversed: false
+      - id: "g25q35sq007"
+        reversed: false
+      - id: "g25q35sq008"
+        reversed: false
+      - id: "g25q35sq009"
+        reversed: false
+    scoring:
+      total: true
 validation:
   required_fields:
     - "personal_id"
     - "submitdate"
   min_responses:
-    tses: 1.0  # Tous les items doivent être complétés
+    cps: 1.0
+    erq: 1.0
+    schoolclim: 1.0
+    hiersupp: 1.0
+    valcons: 1.0
+    psm: 1.0
+    rs: 1.0
+    wfc: 1.0
+    tipi: 1.0
+    twbsworkload: 1.0
+    uwes: 1.0
     tes: 1.0
     smbm: 1.0
-    cps: 1.0
+    pss4: 1.0
     twbi: 1.0
+    tss: 1.0
+    pers: 1.0
+    tsesvalls: 1.0
+    ocq: 1.0
   value_ranges:
-    tses: [1, 9]
+    cps: [1, 7]
+    erq: [1, 7]
+    schoolclim: [1, 5]
+    hiersupp: [1, 5]
+    valcons: [1, 6]
+    psm: [1, 7]
+    rs: [1, 7]
+    wfc: [1, 7]
+    tipi: [1, 7]
+    twbsworkload: [1, 7]
+    uwes: [1, 7]
     tes: [1, 4]
     smbm: [1, 7]
-    cps: [1, 7]
+    pss4: [1, 5]
     twbi: [1, 6]
-    
+    tss: [1, 5]
+    pers: [1, 7]
+    tsesvalls: [1, 9]
+    ocq: [1, 7]
