@@ -28,11 +28,13 @@ _freeze/
 *.url
 *.desktop.ini
 
-# Environment & credentials
+# Environment, groups & credentials
 .env
 .Renviron
 credentials.yml
 config/credentials.yml
+groups.yaml
+config/groups.yml
 
 # Dependencies
 renv/library/
