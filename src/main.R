@@ -9,6 +9,7 @@ library(glue)
 config <- yaml::read_yaml("src/config/scales.yml")
 credentials <- yaml::read_yaml("src/config/credentials.yml")
 survey_id <- credentials$limesurvey$survey_id
+groups_config <- yaml::read_yaml("src/config/groups.yml")
 
 # Préparation du log
 log_info <- function(msg) {
@@ -19,6 +20,32 @@ log_info <- function(msg) {
   cat(glue("[{Sys.time()}] {msg}\n\n"), 
       file = file.path(log_dir, "process.log"), 
       append = TRUE)
+}
+
+# Fonction de gestion des labels de groupes et sous-groupes
+
+get_group_labels <- function() {
+
+  # Création d'une liste pour les labels de groupes
+  group_labels <- tibble(
+    group_id = names(groups_config),
+    group_label = map_chr(groups_config, ~.x$label)
+  )
+  
+  # Création d'une liste pour les labels de sous-groupes
+  subgroup_labels <- tibble(
+    group_id = rep(names(groups_config), 
+                   map_int(groups_config, ~length(.x$subgroups %||% list()))),
+    subgroup_id = unlist(map(groups_config, 
+                             ~names(.x$subgroups %||% list()))),
+    subgroup_label = unlist(map(groups_config, 
+                                ~map_chr(.x$subgroups %||% list(), ~.x$label)))
+  )
+  
+  list(
+    group_labels = group_labels,
+    subgroup_labels = subgroup_labels
+  )
 }
 
 # Fonction pour envoyer des messages Telegram
@@ -109,6 +136,21 @@ main <- function(survey_id, credentials) {
           "group_id"
         )
       )
+    log_info("\nJointure terminée")
+    
+    # 5. Ajout des labels de groupe
+    log_info("\nAjout des labels de groupe")
+    labels_data <- get_group_labels()
+    processed_data <- processed_data %>%
+      left_join(
+        labels_data$group_labels,
+        by = "group_id"
+      ) %>%
+      left_join(
+        labels_data$subgroup_labels,
+        by = c("group_id", "subgroup_id")
+      )
+    
     log_info("\nJointure terminée")
     
     # Ajout de la colonne reseacher id pour chaque observation avec credentials$researcher_codes[1]
