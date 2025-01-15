@@ -9,16 +9,68 @@ clean_teacher_id <- function(full_id) {
   )
 }
 
-prepare_numeric_responses <- function(data, scale_name, config) {
+# Fonction pour inverser un score selon l'échelle
+invert_score <- function(score, scale_type, config) {
+  # Récupérer les limites de l'échelle depuis la configuration
+  scale_limits <- config$scale_types[[scale_type]]
+  if (is.null(scale_limits)) {
+    warning(sprintf("Type d'échelle '%s' non trouvé dans la configuration", scale_type))
+    return(score)
+  }
+  
+  min_value <- scale_limits$min_value
+  max_value <- scale_limits$max_value
+  
+  # Formule d'inversion : nouveau_score = (max + min) - score_original
+  inverted_score <- (max_value + min_value) - score
+  
+  return(inverted_score)
+}
+
+# Modification de prepare_numeric_responses pour gérer les inversions
+prepare_numeric_responses <- function(data, scale_name, config, debug = FALSE) {
   scale_config <- config$scales[[scale_name]]
-  item_ids <- sapply(scale_config$items, function(x) x$id)
   
-  # Convertir les réponses de format "AO01" en numériques
-  data <- data %>%
-    mutate(across(all_of(item_ids), 
-                  ~as.numeric(sub(scale_config$response_prefix, "", .x))))
+  if(debug) {
+    cat(sprintf("\nPréparation des réponses pour l'échelle: %s\n", scale_name))
+  }
   
-  return(data)
+  # Extraction des informations sur les items
+  items_info <- scale_config$items
+  item_ids <- sapply(items_info, function(x) x$id)
+  
+  # Conversion initiale des réponses
+  processed_data <- data
+  
+  # Traitement de chaque item
+  for(i in seq_along(items_info)) {
+    item <- items_info[[i]]
+    col_name <- item$id
+    
+    if(debug) {
+      cat(sprintf("Traitement de l'item %s (inversé: %s)\n", 
+                  col_name, 
+                  ifelse(item$reversed, "oui", "non")))
+    }
+    
+    # Conversion numérique
+    processed_data[[col_name]] <- as.numeric(
+      sub(scale_config$response_prefix, "", 
+          processed_data[[col_name]])
+    )
+    
+    # Inversion si nécessaire
+    if(isTRUE(item$reversed)) {
+      if(debug) cat(sprintf("Inversion des scores pour l'item %s\n", col_name))
+      processed_data[[col_name]] <- invert_score(
+        processed_data[[col_name]], 
+        scale_config$type,
+        config
+      )
+    }
+  }
+  
+  return(processed_data)
 }
 
 process_single_scale <- function(data, scale_name, config, debug = TRUE) {
