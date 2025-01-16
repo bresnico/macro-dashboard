@@ -106,19 +106,25 @@ scales:
       - id: "g09q21sq015"
         reversed: false
     scoring:
-      total: true
+      total:
+        enabled: true
+        category: "competence"
       subscales:
         competences_sociales:
           label: "Compétences sociales"
+          category: "competence"
           items: ["g09q21sq001", "g09q21sq002", "g09q21sq003", "g09q21sq004"]
         assertivite:
           label: "Assertivité"
+          category: "competence"
           items: ["g09q21sq005", "g09q21sq006"]
         competences_cognitives:
           label: "Compétences cognitives"
+          category: "competence"
           items: ["g09q21sq007", "g09q21sq008", "g09q21sq009","g09q21sq010"]
         competences_emotionnelles:
           label: "Compétences émotionnelles"
+          category: "competence"
           items: ["g09q21sq011", "g09q21sq012", "g09q21sq013", "g09q21sq014","g09q21sq015"]
   erq:
     id: "g12"
@@ -153,9 +159,11 @@ scales:
       subscales:
         suppression:
           label: "Suppression émotionnelle"
+          category: "competence"
           items: ["g12q22sq002", "g12q22sq004", "g12q22sq006", "g12q22sq009"]
         reevaluation:
           label: "Réévaluation émotionnelle"
+          category: "competence"
           items:  ["g12q22sq001", "g12q22sq003", "g12q22sq005", "g12q22sq007", "g12q22sq008", "g12q22sq010"]
   schoolclim:
     id: "g13"
@@ -208,22 +216,29 @@ scales:
       - id: "g13q23sq021"
         reversed: true
     scoring:
-      total: true
+      total:
+        enabled: true
+        category: "competence"
       subscales:
         collaboration:
           label: "Collaboration"
+          category: "competence"
           items: ["g13q23sq001", "g13q23sq002", "g13q23sq003", "g13q23sq004", "g13q23sq005", "g13q23sq006"]
         student_relations:
           label: "Relation avec les élèves"
+          category: "competence"
           items: ["g13q23sq007", "g13q23sq008", "g13q23sq009", "g13q23sq010"]
         school_ressources:
           label: "Ressources de l'école"
+          category: "competence"
           items: ["g13q23sq011", "g13q23sq012", "g13q23sq013", "g13q23sq014"]
         decision_making:
           label: "Participation aux décisions"
+          category: "competence"
           items: ["g13q23sq015", "g13q23sq016", "g13q23sq017"]
         instructional_innovation:
           label: "Innovation pédagogique"
+          category: "competence"
           items: ["g13q23sq018", "g13q23sq019", "g13q23sq020", "g13q23sq021"]
   hiersupp:
     id: "g14"
@@ -250,7 +265,9 @@ scales:
       - id: "g14q24sq008"
         reversed: true 
     scoring:
-      total: true
+      total:
+        enabled: true
+        category: "competence"
   valcons:
     id: "g15"
     label: "Consonance des Valeurs (ValCons)"
@@ -266,7 +283,9 @@ scales:
       - id: "g15q25sq003"
         reversed: false
     scoring:
-      total: true
+      total:
+        enabled: true
+        category: "competence"
   psm:
     id: "g16"
     label: "Motivation des élèves (PSM)"
@@ -290,7 +309,9 @@ scales:
       - id: "g16q26sq007"
         reversed: false
     scoring:
-      total: true
+      total:
+        enabled: true
+        category: "competence"
   rs:
     id: "g17"
     label: "Rôles et Organisation (RS)"
@@ -322,12 +343,15 @@ scales:
       subscales:
         ambiguite_role:
           label: "Ambiguïté des Rôles"
+          category: "competence"
           items: ["g17q27sq001", "g17q27sq002", "g17q27sq003", "g17q27sq004"]
         conflit_role:
           label: "Conflit de Rôles"
+          category: "competence"
           items: ["g17q27sq005","g17q27sq006","g17q27sq007"]
         surcharge_role:
           label: "Surcharge des Rôles"
+          category: "competence"
           items: ["g17q27sq008", "g17q27sq009"]
   wfc:
     id: "g18"
@@ -362,9 +386,11 @@ scales:
       subscales:
         work_family_conflict_scale:
           label: "Conflits Travail - Vie Privée"
+          category: "competence"
           items: ["g18q28sq001","g18q28sq002","g18q28sq003","g18q28sq004","g18q28sq005"]
         family_work_conflict_scale:
           label: "Conflits Vie Privée - Travail"
+          category: "competence"
           items: ["g18q28sq006","g18q28sq007","g18q28sq008","g18q28sq009","g18q28sq010"]
   tipi:
     id: "g19"
@@ -399,18 +425,23 @@ scales:
       subscales:
         extraversion:
           label: "Extraversion"
+          category: "competence"
           items: ["g19q29sq001", "g19q29sq006"]
         agrableness:
           label: "Agréabilité"
+          category: "competence"
           items: ["g19q29sq002", "g19q29sq007"]
         conscientiousness:
           label: "Conscienciosité"
+          category: "competence"
           items: ["g19q29sq003", "g19q29sq008"]
         stab_em:
           label: "Stabilité"
+          category: "competence"
           items: ["g19q29sq004", "g19q29sq009"]
         openness:
           label: "Ouverture"
+          category: "competence"
           items: ["g19q29sq005", "g19q29sq010"]
   twbsworkload:
     id: "g20"
@@ -437,21 +468,27 @@ scales:
       subscales:
         notes:
           label: "Notes"
+          category: "competence"
           items: ["g20q30sq001"]
         temps:
           label: "Temps"
+          category: "competence"
           items: ["g20q30sq002"]
         admin:
           label: "Admin"
+          category: "competence"
           items: ["g20q30sq003"]
         reunions:
           label: "Réunions"
+          category: "competence"
           items: ["g20q30sq004"]
         extrajob:
           label: "Extra Job"
+          category: "competence"
           items: ["g20q30sq005"]
         cours:
           label: "Cours"
+          category: "competence"
           items: ["g20q30sq006"]
   uwes:
     id: "g21"
@@ -480,16 +517,21 @@ scales:
       - id: "g21q31sq009"
         reversed: false
     scoring:
-      total: true
+      total:
+        enabled: true
+        category: "competence"
       subscales:
         vigor:
           label: "Vigueur"
+          category: "competence"
           items: ["g21q31sq001", "g21q31sq002", "g21q31sq003"]
         dedication:
           label: "Dévouement"
+          category: "competence"
           items: ["g21q31sq004", "g21q31sq005", "g21q31sq006"]
         absorption:
           label: "Absorption cognitive"
+          category: "competence"
           items: ["g21q31sq007", "g21q31sq008", "g21q31sq009"]
   tes:
     id: "g07"
@@ -528,12 +570,15 @@ scales:
       subscales:
         joie:
           label: "Joie"
+          category: "competence"
           items: ["g07q19sq001", "g07q19sq002", "g07q19sq003", "g07q19sq004"]
         colere:
           label: "Colère"
+          category: "competence"
           items: ["g07q19sq005", "g07q19sq006", "g07q19sq007", "g07q19sq008"]
         anxiete:
           label: "Anxiété"
+          category: "competence"
           items: ["g07q19sq009", "g07q19sq010", "g07q19sq011", "g07q19sq012"]
   smbm:
     id: "g08"
@@ -572,16 +617,21 @@ scales:
       - id: "g08q20sq014"
         reversed: false
     scoring:
-      total: true
+      total:
+        enabled: true
+        category: "competence"
       subscales:
         fatigue_physique:
           label: "Fatigue physique"
+          category: "competence"
           items: ["g08q20sq001", "g08q20sq002", "g08q20sq003", "g08q20sq004","g08q20sq005","g08q20sq006"]
         lassitude_cognitive:
           label: "Lassitude cognitive"
+          category: "competence"
           items: ["g08q20sq007", "g08q20sq008", "g08q20sq009", "g08q20sq010","g08q20sq011"]
         epuisement_emotionnel:
           label: "Epuisement émotionnel"
+          category: "competence"
           items: ["g08q20sq012", "g08q20sq013", "g08q20sq014"]
   pss4:
     id: "g22"
@@ -600,7 +650,9 @@ scales:
       - id: "g22q32sq004"
         reversed: false
     scoring:
-      total: true
+      total:
+        enabled: true
+        category: "competence"
   twbi:
     id: "g10"
     label: "Bien-être Enseignant (TWBI)"
@@ -650,22 +702,29 @@ scales:
       - id: "g10q22sq020"
         reversed: false
     scoring:
-      total: true
+      total:
+       enabled: true
+       category: "competence"
       subscales:
         physical_wellbeing:
           label: "Bien-être physique"
+          category: "competence"
           items: ["g10q22sq001", "g10q22sq002", "g10q22sq003", "g10q22sq004"]
         emotional_psychological_wellbeing:
           label: "Bien-être émotionnel"
+          category: "competence"
           items: ["g10q22sq005", "g10q22sq006", "g10q22sq007", "g10q22sq008"]
         cognitive_wellbeing:
           label: "Bien-être cognitif"
+          category: "competence"
           items: ["g10q22sq009", "g10q22sq010", "g10q22sq011", "g10q22sq012"]
         social_wellbeing:
           label: "Bien-être social"
+          category: "competence"
           items: ["g10q22sq013", "g10q22sq014", "g10q22sq015", "g10q22sq016"]
         spiritual_wellbeing:
           label: "Bien-être spirituel"
+          category: "competence"
           items: ["g10q22sq017", "g10q22sq018", "g10q22sq019", "g10q22sq020"]
   tss:
     id: "g23"
@@ -686,7 +745,9 @@ scales:
       - id: "g23q33sq005"
         reversed: false
     scoring:
-      total: true
+      total:
+        enabled: true
+        category: "competence"
   pers:
     id: "g24"
     label: "Persévérance dans le métier (PERS)"
@@ -716,7 +777,9 @@ scales:
       - id: "g24q34sq010"
         reversed: true
     scoring:
-      total: true
+      total:
+        enabled: true
+        category: "competence"
   tsesvalls:
     id: "g06"
     label: "Efficacité perçue (TSES Valls)"
@@ -750,16 +813,21 @@ scales:
       - id: "g06q18sq012"
         reversed: false
     scoring:
-      total: true
+      total:
+        enabled: true
+        category: "competence"
       subscales:
         student_engagement:
           label: "Efficacité à engaer les élèves"
+          category: "competence"
           items: ["g06q18sq002", "g06q18sq003", "g06q18sq004", "g06q18sq011"]
         instructional_strategies:
           label: "Efficacité des stratégies pédagogiques"
+          category: "competence"
           items: ["g06q18sq005", "g06q18sq009", "g06q18sq010", "g06q18sq012"]
         classroom_management:
           label: "Efficacité dans la gestion de classe"
+          category: "competence"
           items: ["g06q18sq001", "g06q18sq006", "g06q18sq007", "g06q18sq008"]
   ocq:
     id: "g25"
@@ -788,7 +856,10 @@ scales:
       - id: "g25q35sq009"
         reversed: false
     scoring:
-      total: true
+      total:
+        enabled: true
+        category: "competence"
+
 validation:
   required_fields:
     - "personal_id"

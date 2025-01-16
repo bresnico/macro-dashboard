@@ -1,7 +1,6 @@
-# Préparation de l'identifiant utilisateur sans le mot de sécurité (fonction rétrocompatible)
+# Fonctions utilitaires ----
 
 clean_teacher_id <- function(full_id) {
-  # Vectorisation avec ifelse pour gérer les vecteurs
   ifelse(
     grepl("-", full_id),
     sub("^(.+?)-.*$", "\\1", full_id),
@@ -9,9 +8,7 @@ clean_teacher_id <- function(full_id) {
   )
 }
 
-# Fonction pour inverser un score selon l'échelle
 invert_score <- function(score, scale_type, config) {
-  # Récupérer les limites de l'échelle depuis la configuration
   scale_limits <- config$scale_types[[scale_type]]
   if (is.null(scale_limits)) {
     warning(sprintf("Type d'échelle '%s' non trouvé dans la configuration", scale_type))
@@ -20,31 +17,18 @@ invert_score <- function(score, scale_type, config) {
   
   min_value <- scale_limits$min_value
   max_value <- scale_limits$max_value
-  
-  # Formule d'inversion : nouveau_score = (max + min) - score_original
-  inverted_score <- (max_value + min_value) - score
-  
-  return(inverted_score)
+  (max_value + min_value) - score
 }
 
-# Modification de prepare_numeric_responses pour gérer les inversions
+# Préparation des données ----
+
 prepare_numeric_responses <- function(data, scale_name, config, debug = FALSE) {
   scale_config <- config$scales[[scale_name]]
-  
-  if(debug) {
-    cat(sprintf("\nPréparation des réponses pour l'échelle: %s\n", scale_name))
-  }
-  
-  # Extraction des informations sur les items
   items_info <- scale_config$items
-  item_ids <- sapply(items_info, function(x) x$id)
   
-  # Conversion initiale des réponses
   processed_data <- data
   
-  # Traitement de chaque item
-  for(i in seq_along(items_info)) {
-    item <- items_info[[i]]
+  for(item in items_info) {
     col_name <- item$id
     
     if(debug) {
@@ -55,8 +39,7 @@ prepare_numeric_responses <- function(data, scale_name, config, debug = FALSE) {
     
     # Conversion numérique
     processed_data[[col_name]] <- as.numeric(
-      sub(scale_config$response_prefix, "", 
-          processed_data[[col_name]])
+      sub(scale_config$response_prefix, "", processed_data[[col_name]])
     )
     
     # Inversion si nécessaire
@@ -73,40 +56,103 @@ prepare_numeric_responses <- function(data, scale_name, config, debug = FALSE) {
   return(processed_data)
 }
 
+# Préparation des métadonnées ----
+
+prepare_scale_labels <- function(scale_names, config) {
+  map_dfr(scale_names, function(scale_name) {
+    scale_config <- config$scales[[scale_name]]
+    
+    # Labels des sous-scores
+    subscore_labels <- NULL
+    if(!is.null(scale_config$scoring$subscales)) {
+      subscore_labels <- map_dfr(names(scale_config$scoring$subscales), function(subscale_name) {
+        tibble(
+          scale = scale_name,
+          scale_label = scale_config$label,
+          scale_description = scale_config$description,
+          scale_reference = scale_config$reference,
+          score_type = subscale_name,
+          score_type_label = scale_config$scoring$subscales[[subscale_name]]$label
+        )
+      })
+    }
+    
+    # Label du score total
+    total_label <- NULL
+    if(is.list(scale_config$scoring$total) && isTRUE(scale_config$scoring$total$enabled)) {
+      total_label <- tibble(
+        scale = scale_name,
+        scale_label = scale_config$label,
+        scale_description = scale_config$description,
+        scale_reference = scale_config$reference,
+        score_type = "total_score",
+        score_type_label = "Score global"
+      )
+    }
+    
+    bind_rows(subscore_labels, total_label)
+  })
+}
+
+prepare_score_categories <- function(config) {
+  map_dfr(names(config$scales), function(scale_name) {
+    scale_config <- config$scales[[scale_name]]
+    scoring_config <- scale_config$scoring
+    
+    # Catégories pour score total
+    total_category <- if(is.list(scoring_config$total) && 
+                         isTRUE(scoring_config$total$enabled)) {
+      tibble(
+        scale = scale_name,
+        score_type = "total_score",
+        jdr_category = scoring_config$total$category
+      )
+    }
+    
+    # Catégories pour subscales
+    subscale_categories <- if(!is.null(scoring_config$subscales)) {
+      map_dfr(names(scoring_config$subscales), function(subscale_name) {
+        tibble(
+          scale = scale_name,
+          score_type = subscale_name,
+          jdr_category = scoring_config$subscales[[subscale_name]]$category
+        )
+      })
+    }
+    
+    bind_rows(total_category, subscale_categories)
+  })
+}
+
+# Traitement des scores ----
+
 process_single_scale <- function(data, scale_name, config, debug = TRUE) {
   if(debug) cat("\nTraitement de l'échelle:", scale_name, "\n")
   
-  # Préparation numérique avant tout traitement
+  # Préparation numérique
   data <- prepare_numeric_responses(data, scale_name, config)
-  
-  # Extraction de la configuration de l'échelle
   scale_config <- config$scales[[scale_name]]
-  # Extraction des IDs des items
   item_ids <- sapply(scale_config$items, function(x) x$id)
   
-  if(debug) {
-    cat("Items de l'échelle:\n")
-    print(item_ids)
-  }
-  
-  # Préparation initiale des données avec calcul des scores
+  # Préparation des données de base
   scores_data <- data %>%
     mutate(
-      person_id = clean_teacher_id(g01q13),   # ID nettoyé pour les agrégations 
-      person_id_secure = g01q13,              # ID complet pour l'interface      
-      group_id = groupecode,           # Maintenir pour compatibilité
-      subgroup_id = ifelse(is.na(grouperef) | grouperef == "", "all", grouperef),  # Nouveau avec valeur par défaut
+      person_id = clean_teacher_id(g01q13),
+      person_id_secure = g01q13,
+      group_id = groupecode,
+      subgroup_id = ifelse(is.na(grouperef) | grouperef == "", "all", grouperef),
       timestamp = ymd_hms(datestamp),
       month = floor_date(timestamp, "month")
     ) %>%
-    select(timestamp, month, person_id, person_id_secure, group_id, subgroup_id, all_of(item_ids))
+    select(timestamp, month, person_id, person_id_secure, 
+           group_id, subgroup_id, all_of(item_ids))
   
-  # Calcul des scores individuels
-  if(scale_config$scoring$total) {
+  # Calcul des scores
+  if(is.list(scale_config$scoring$total) && 
+     isTRUE(scale_config$scoring$total$enabled)) {
     scores_data <- scores_data %>%
       rowwise() %>%
       mutate(
-        # Si toutes les valeurs de l'échelle sont NA, retourne -99, sinon calcule la moyenne
         total_score = if(all(is.na(c_across(all_of(item_ids))))) {
           -99
         } else {
@@ -132,11 +178,13 @@ process_single_scale <- function(data, scale_name, config, debug = TRUE) {
     }
   }
   
-  # Identification des colonnes de scores
-  score_columns <- setdiff(names(scores_data), 
-                           c("timestamp", "month", "person_id", "person_id_secure", "group_id", "subgroup_id", item_ids))
+  # Préparation format long et calcul des références
+  score_columns <- setdiff(
+    names(scores_data),
+    c("timestamp", "month", "person_id", "person_id_secure", 
+      "group_id", "subgroup_id", item_ids)
+  )
   
-  # Préparation du format long avec scores de référence
   scores_long <- scores_data %>%
     select(timestamp, month, person_id, person_id_secure, 
            group_id, subgroup_id, all_of(score_columns)) %>%
@@ -145,11 +193,10 @@ process_single_scale <- function(data, scale_name, config, debug = TRUE) {
       names_to = "score_type",
       values_to = "score_value"
     ) %>%
-    # Calcul des références au niveau du sous-groupe
+    # Références sous-groupe
     group_by(group_id, subgroup_id, month, score_type) %>%
     mutate(
       subgroup_n = sum(score_value != -99, na.rm = TRUE),
-      # Calculs statistiques seulement si n ≥ 10
       subgroup_reference = if(subgroup_n >= 10) {
         mean(score_value[score_value != -99], na.rm = TRUE)
       } else {
@@ -162,11 +209,10 @@ process_single_scale <- function(data, scale_name, config, debug = TRUE) {
       }
     ) %>%
     ungroup() %>%
-    # Calcul des références au niveau du groupe principal
+    # Références groupe
     group_by(group_id, month, score_type) %>%
     mutate(
       group_n = sum(score_value != -99, na.rm = TRUE),
-      # Calculs statistiques seulement si n ≥ 10
       group_reference = if(group_n >= 10) {
         mean(score_value[score_value != -99], na.rm = TRUE)
       } else {
@@ -177,7 +223,6 @@ process_single_scale <- function(data, scale_name, config, debug = TRUE) {
       } else {
         NA_real_
       },
-      # Quartiles seulement si n ≥ 10
       quartile = if(group_n >= 10) {
         ntile(score_value[score_value != -99], 4)
       } else {
@@ -187,104 +232,55 @@ process_single_scale <- function(data, scale_name, config, debug = TRUE) {
     ) %>%
     ungroup()
   
-  
-  if(debug) {
-    cat("\nNombre d'observations:", nrow(scores_long))
-    cat("\nNombre de groupes uniques:", n_distinct(scores_long$group_id))
-    cat("\nPremières lignes du résultat:\n")
-    print(head(scores_long))
-  }
-  
   return(scores_long)
 }
 
+# Standardisation des types de données ----
 
-prepare_all_scales_scores <- function(data, config, debug = FALSE) {
-  scale_names <- names(config$scales)
-  
-  # Préparation des labels
-  scale_labels <- map_dfr(scale_names, function(scale_name) {
-    scale_config <- config$scales[[scale_name]]
-    
-    # Labels des sous-scores
-    subscore_labels <- NULL
-    if(!is.null(scale_config$scoring$subscales)) {
-      subscore_labels <- map_dfr(names(scale_config$scoring$subscales), function(subscale_name) {
-        label <- scale_config$scoring$subscales[[subscale_name]]$label
-        tibble(
-          scale = scale_name,
-          scale_label = scale_config$label,
-          scale_description = scale_config$description,
-          scale_reference = scale_config$reference,
-          score_type = subscale_name,
-          score_type_label = label
-        )
-      })
-    }
-    
-    # Label du score total
-    total_label <- NULL
-    if(isTRUE(scale_config$scoring$total)) {
-      total_label <- tibble(
-        scale = scale_name,
-        scale_label = scale_config$label,
-        scale_description = scale_config$description,
-        scale_reference = scale_config$reference,
-        score_type = "total_score",
-        score_type_label = "Score global"
-      )
-    }
-    
-    bind_rows(subscore_labels, total_label)
-  })
-  
-  # Traitement de toutes les échelles
-  all_scores <- map_dfr(scale_names, ~process_single_scale(data, .x, config, debug = debug))
-  
-  final_scores <- all_scores %>%
-    left_join(scale_labels, by = c("scale", "score_type")) %>%
-    arrange(timestamp, group_id, subgroup_id, person_id, scale, score_type) %>%
-    select(
-      timestamp,
-      month,
-      person_id,
-      person_id_secure,
-      group_id,
-      subgroup_id,
-      scale,
-      scale_label,
-      scale_description,
-      scale_reference,
-      score_type,
-      score_type_label,
-      score_value,
-      subgroup_reference,  # Nouvelle colonne
-      subgroup_sd,         # Nouvelle colonne
-      subgroup_n,          # Nouvelle colonne
-      group_reference,     # Renommé de reference_value
-      group_sd,           # Renommé de reference_sd
-      group_n,            # Renommé de n_group
-      quartile
-    )
-  
-  # Transformation finale pour assurer des types corrects
-  final_scores <- final_scores %>%
+standardize_data_types <- function(scores) {
+  scores %>%
     mutate(
-      # Dates
       timestamp = as.Date(timestamp),
       month = format(month, "%B %Y"),
-      
-      # S'assurer que tous les scores sont numériques
       across(c(score_value, 
                subgroup_reference, subgroup_sd,
                group_reference, group_sd), 
              ~as.numeric(.x)),
-      
-      # Compteurs en entiers
       across(c(subgroup_n, group_n), as.integer),
-      
-      # Quartile doit être un entier
       quartile = as.integer(quartile)
+    )
+}
+
+# Fonction principale ----
+
+prepare_all_scales_scores <- function(data, config, debug = FALSE) {
+  # Préparation des métadonnées
+  scale_names <- names(config$scales)
+  scale_labels <- prepare_scale_labels(scale_names, config)
+  categories <- prepare_score_categories(config)
+  
+  # Traitement des échelles
+  all_scores <- map_dfr(scale_names, 
+                        ~process_single_scale(data, .x, config, debug))
+  
+  # Assemblage final
+  final_scores <- all_scores %>%
+    left_join(scale_labels, by = c("scale", "score_type")) %>%
+    left_join(categories, by = c("scale", "score_type")) %>%
+    mutate(
+      jdr_category = if_else(is.na(jdr_category), 
+                             "non_categorise", jdr_category)
+    ) %>%
+    arrange(timestamp, group_id, subgroup_id, 
+            person_id, scale, score_type) %>%
+    standardize_data_types() %>%
+    select(
+      timestamp, month, person_id, person_id_secure,
+      group_id, subgroup_id, scale, scale_label,
+      scale_description, scale_reference, score_type,
+      score_type_label, jdr_category, score_value,
+      subgroup_reference, subgroup_sd, subgroup_n,
+      group_reference, group_sd, group_n, quartile
     )
   
   return(final_scores)
