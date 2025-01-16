@@ -1,4 +1,7 @@
-library(httr)
+source("src/lib/utils.R")
+
+# Requires: httr
+source("src/lib/dependencies.R")
 
 # Configuration Telegram
 credentials <- yaml::read_yaml("src/config/credentials.yml")

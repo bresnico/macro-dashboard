@@ -1,6 +1,5 @@
-# libraries nécessaires
-library(tidyverse)
-library(limer)
+# Requires: limer, tidyverse
+source("src/lib/dependencies.R")
 
 # fonction pour charger les données LimeSurvey
 setup_limesurvey_connection <- function(credentials) {

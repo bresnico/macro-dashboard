@@ -1,78 +1,18 @@
+source("src/lib/dependencies.R")
+load_dependencies()
+
 source("src/lib/connection.R")
 source("src/lib/import.R")
 source("src/lib/scales.R")
 source("src/lib/demographics.R")
-
-library(glue)
+source("src/lib/utils.R")
+source("src/lib/groups.R")
 
 # Chargement config
 config <- yaml::read_yaml("src/config/scales.yml")
 credentials <- yaml::read_yaml("src/config/credentials.yml")
 survey_id <- credentials$limesurvey$survey_id
 groups_config <- yaml::read_yaml("src/config/groups.yml")
-
-# Préparation du log
-log_info <- function(msg) {
-  log_dir <- "logs"
-  if (!dir.exists(log_dir)) {
-    dir.create(log_dir, recursive = TRUE)
-  }
-  cat(glue("[{Sys.time()}] {msg}\n\n"), 
-      file = file.path(log_dir, "process.log"), 
-      append = TRUE)
-}
-
-# Fonction de gestion des labels de groupes et sous-groupes
-
-get_group_labels <- function(groups_config) {
-
-  # Création d'une liste pour les labels de groupes
-  group_labels <- tibble(
-    group_id = names(groups_config),
-    group_label = map_chr(groups_config, ~.x$label)
-  )
-  
-  # Création d'une liste pour les labels de sous-groupes
-  subgroup_labels <- tibble(
-    group_id = rep(names(groups_config), 
-                   map_int(groups_config, ~length(.x$subgroups %||% list()))),
-    subgroup_id = unlist(map(groups_config, 
-                             ~names(.x$subgroups %||% list()))),
-    subgroup_label = unlist(map(groups_config, 
-                                ~map_chr(.x$subgroups %||% list(), ~.x$label)))
-  )
-  
-  list(
-    group_labels = group_labels,
-    subgroup_labels = subgroup_labels
-  )
-}
-
-# Fonction pour envoyer des messages Telegram
-send_telegram_notification <- function(message, bot_token, chat_id) {
-  if (!startsWith(as.character(chat_id), "-100")) {
-    chat_id <- paste0("-100", gsub("-", "", chat_id))
-  }
-  
-  url <- paste0("https://api.telegram.org/bot", bot_token, "/sendMessage")
-  
-  body <- list(
-    chat_id = chat_id,
-    text = message,
-    parse_mode = "HTML"
-  )
-  
-  tryCatch({
-    response <- httr::POST(
-      url = url,
-      body = body,
-      encode = "json"
-    )
-    return(httr::status_code(response) == 200)
-  }, error = function(e) {
-    return(FALSE)
-  })
-}
 
 # Pipeline principal
 main <- function(survey_id, credentials, groups_config) {
