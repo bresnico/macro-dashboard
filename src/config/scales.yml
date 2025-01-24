@@ -71,7 +71,7 @@ scales:
     id: "g09"
     label: "Compétences psychosociales (CPS)"
     description: "texte de description de CPS"
-    reference: "texte de référence bibliographique de CPS"
+    reference: "Tessier et al., sans date."
     type: "likert_7"
     response_prefix: "AO0"
     items:
@@ -107,7 +107,7 @@ scales:
         reversed: false
     scoring:
       total:
-        enabled: true
+        enabled: false
         category: "competence"
       subscales:
         competences_sociales:
@@ -130,7 +130,7 @@ scales:
     id: "g12"
     label: "Régulation émotionnelle (ERQ)"
     description: "description ERQ"
-    reference: "référence ERQ"
+    reference: "Seixas, R., Pignault, A., & Houssemand, C. (2021). Emotion Regulation Questionnaire-Adapted and Individual Differences in Emotion Regulation. Europe’s Journal of Psychology, 17(1), 70–84. https://doi.org/10.5964/ejop.2755"
     type: "likert_7"
     response_prefix: "AO0"
     items:
@@ -165,16 +165,38 @@ scales:
           label: "Réévaluation émotionnelle"
           category: "competence"
           items:  ["g12q22sq001", "g12q22sq003", "g12q22sq005", "g12q22sq007", "g12q22sq008", "g12q22sq010"]
-  schoolclim:
+  prep:
+    id: "g07"
+    label: "Préparation (PREP)"
+    description: "texte de description de PREP"
+    reference: "Elyashiv, R. A., & Rozenberg, K. (2024). Fostering early career teachers' preparedness, self-efficacy and professional commitment: The role of teacher education. Teaching and Teacher Education, 148, 104691."
+    type: "likert_5"
+    response_prefix: "AO0"
+    items:
+      - id: "g07q37sq001"
+        reversed: false
+      - id: "g07q37sq002"
+        reversed: false
+      - id: "g07q37sq003"
+        reversed: false
+      - id: "g07q37sq004"
+        reversed: false
+      - id: "g07q37sq005"
+        reversed: false
+    scoring:
+      total:
+        enabled: false
+        category: "competence"
+  sleq:
     id: "g13"
-    label: "Climat scolaire (SchoolClim)"
-    description: "texte de description de SchoolClim"
-    reference: "texte de référence bibliographique de SchoolClim"
+    label: "Climat scolaire (SLEQ)"
+    description: "texte de description de SLEQ SchoolClim"
+    reference: "Johnson, B., Stevens, J. J., & Zvoch, K. (2007). Teachers' perceptions of school climate: A validity study of scores from the Revised School Level Environment Questionnaire. Educational and psychological measurement, 67(5), 833-844."
     type: "likert_5"
     response_prefix: "AO0"
     items:
       - id: "g13q23sq001"
-        reversed: true
+        reversed: false
       - id: "g13q23sq002"
         reversed: false
       - id: "g13q23sq003"
@@ -182,7 +204,7 @@ scales:
       - id: "g13q23sq004"
         reversed: false
       - id: "g13q23sq005"
-        reversed: true
+        reversed: false
       - id: "g13q23sq006"
         reversed: false
       - id: "g13q23sq007"
@@ -190,29 +212,29 @@ scales:
       - id: "g13q23sq008"
         reversed: false
       - id: "g13q23sq009"
-        reversed: false
+        reversed: true
       - id: "g13q23sq010"
         reversed: false
       - id: "g13q23sq011"
-        reversed: true
+        reversed: false
       - id: "g13q23sq012"
-        reversed: true
+        reversed: false
       - id: "g13q23sq013"
         reversed: false
       - id: "g13q23sq014"
-        reversed: false
+        reversed: true
       - id: "g13q23sq015"
         reversed: false
       - id: "g13q23sq016"
         reversed: true
       - id: "g13q23sq017"
-        reversed: true
+        reversed: false
       - id: "g13q23sq018"
-        reversed: false
+        reversed: true
       - id: "g13q23sq019"
-        reversed: false
+        reversed: true
       - id: "g13q23sq020"
-        reversed: false
+        reversed: true
       - id: "g13q23sq021"
         reversed: true
     scoring:
@@ -223,28 +245,59 @@ scales:
         collaboration:
           label: "Collaboration"
           category: "competence"
-          items: ["g13q23sq001", "g13q23sq002", "g13q23sq003", "g13q23sq004", "g13q23sq005", "g13q23sq006"]
+          items: ["g13q23sq001", "g13q23sq006", "g13q23sq011", "g13q23sq016", "g13q23sq020", "g13q23sq021"]
         student_relations:
           label: "Relation avec les élèves"
           category: "competence"
-          items: ["g13q23sq007", "g13q23sq008", "g13q23sq009", "g13q23sq010"]
+          items: ["g13q23sq002", "g13q23sq005", "g13q23sq012", "g13q23sq017"]
         school_ressources:
           label: "Ressources de l'école"
           category: "competence"
-          items: ["g13q23sq011", "g13q23sq012", "g13q23sq013", "g13q23sq014"]
+          items: ["g13q23sq003", "g13q23sq008", "g13q23sq013", "g13q23sq018"]
         decision_making:
           label: "Participation aux décisions"
           category: "competence"
-          items: ["g13q23sq015", "g13q23sq016", "g13q23sq017"]
+          items: ["g13q23sq004", "g13q23sq009", "g13q23sq014"]
         instructional_innovation:
           label: "Innovation pédagogique"
           category: "competence"
-          items: ["g13q23sq018", "g13q23sq019", "g13q23sq020", "g13q23sq021"]
-  hiersupp:
+          items: ["g13q23sq005", "g13q23sq010", "g13q23sq015", "g13q23sq019"]
+  cess:
+    id: "g09"
+    label: "Soutien des collègues (CESS)"
+    description: "texte de description de CESS"
+    reference: "API à venir"
+    type: "likert_5"
+    response_prefix: "AO0"
+    items:
+      - id: "g09q38sq001"
+        reversed: false
+      - id: "g09q38sq002"
+        reversed: false
+      - id: "g09q38sq003"
+        reversed: false
+      - id: "g09q38sq004"
+        reversed: false
+      - id: "g09q38sq005"
+        reversed: false
+    scoring:
+      total:
+        enabled: true
+        category: "competence"
+      subscales:
+        emotional:
+          label: "Support émotionnel"
+          category: "competence"
+          items: ["g09q38sq001", "g09q38sq002", "g09q38sq003"]
+        instrumental:
+          label: "Support instrumental"
+          category: "competence"
+          items: ["g09q38sq004", "g09q38sq005"]
+  rscts:
     id: "g14"
-    label: "Soutien de la hiérarchie (HierSupp)"
+    label: "Soutien de la hiérarchie (r-SCTS)"
     description: "description HierSupp"
-    reference: "référence HierSupp"
+    reference: "Liu, Y., Ding, C., Berkowitz, M. W., & Bier, M. C. (2014). A psychometric evaluation of a revised school climate teacher survey. Canadian Journal of School Psychology, 29(1), 54-67."
     type: "likert_5"
     response_prefix: "AO0"
     items:
@@ -272,7 +325,7 @@ scales:
     id: "g15"
     label: "Consonance des Valeurs (ValCons)"
     description: "description ValCons"
-    reference: "référence ValCons"
+    reference: "Skaalvik, E. M., & Skaalvik, S. (2011). Teachers’ feeling of belonging, exhaustion, and job satisfaction: the role of school goal structure and value consonance. Anxiety, Stress, & Coping, 24(4), 369–385. https://doi.org/10.1080/10615806.2010.544300"
     type: "likert_6"
     response_prefix: "AO0"
     items:
@@ -290,7 +343,7 @@ scales:
     id: "g16"
     label: "Motivation des élèves (PSM)"
     description: "description PSM"
-    reference: "référence PSM"
+    reference: "Hardré, Patricia L., Davis, Kendrick A. and Sullivan, David W. (2008) 'Measuring teacher perceptions of the how and why of student motivation', Educational Research and Evaluation, 14:2, 155 – 179. http://dx.doi.org/10.1080/13803610801956689"
     type: "likert_7"
     response_prefix: "AO0"
     items:
@@ -312,11 +365,24 @@ scales:
       total:
         enabled: true
         category: "competence"
+      subscales:
+        effort:
+          label: "Effort"
+          category: "competence"
+          items: ["g16q26sq001", "g16q26sq002", "g16q26sq005"]
+        engagement:
+          label: "Engagement"
+          category: "competence"
+          items: ["g16q26sq003", "g16q26sq004", "g16q26sq006"]
+        interet:
+          label: "Intérêt général"
+          category: "competence"
+          items: ["g16q26sq007"]
   rs:
     id: "g17"
     label: "Rôles et Organisation (RS)"
     description: "description RS"
-    reference: "référence RS"
+    reference: "Conley, S., & You, S. (2009). Teacher role stress, satisfaction, commitment, and intentions to leave: A structural model. Psychological reports, 105(3), 771-786."
     type: "likert_7"
     response_prefix: "AO0"
     items:
