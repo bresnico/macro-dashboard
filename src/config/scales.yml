@@ -108,23 +108,23 @@ scales:
     scoring:
       total:
         enabled: false
-        category: "competence"
+        category: "unused"
       subscales:
         competences_sociales:
           label: "Compétences sociales"
-          category: "competence"
+          category: "RI"
           items: ["g09q21sq001", "g09q21sq002", "g09q21sq003", "g09q21sq004"]
         assertivite:
           label: "Assertivité"
-          category: "competence"
+          category: "RI"
           items: ["g09q21sq005", "g09q21sq006"]
         competences_cognitives:
           label: "Compétences cognitives"
-          category: "competence"
+          category: "RI"
           items: ["g09q21sq007", "g09q21sq008", "g09q21sq009","g09q21sq010"]
         competences_emotionnelles:
           label: "Compétences émotionnelles"
-          category: "competence"
+          category: "RI"
           items: ["g09q21sq011", "g09q21sq012", "g09q21sq013", "g09q21sq014","g09q21sq015"]
   erq:
     id: "g12"
@@ -159,11 +159,11 @@ scales:
       subscales:
         suppression:
           label: "Suppression émotionnelle"
-          category: "competence"
+          category: "RI"
           items: ["g12q22sq002", "g12q22sq004", "g12q22sq006", "g12q22sq009"]
         reevaluation:
           label: "Réévaluation émotionnelle"
-          category: "competence"
+          category: "RI"
           items:  ["g12q22sq001", "g12q22sq003", "g12q22sq005", "g12q22sq007", "g12q22sq008", "g12q22sq010"]
   prep:
     id: "g07"
@@ -185,8 +185,8 @@ scales:
         reversed: false
     scoring:
       total:
-        enabled: false
-        category: "competence"
+        enabled: true
+        category: "RI"
   sleq:
     id: "g13"
     label: "Climat scolaire (SLEQ)"
@@ -240,27 +240,27 @@ scales:
     scoring:
       total:
         enabled: true
-        category: "competence"
+        category: "unused"
       subscales:
         collaboration:
           label: "Collaboration"
-          category: "competence"
+          category: "RO"
           items: ["g13q23sq001", "g13q23sq006", "g13q23sq011", "g13q23sq016", "g13q23sq020", "g13q23sq021"]
         student_relations:
           label: "Relation avec les élèves"
-          category: "competence"
+          category: "RO"
           items: ["g13q23sq002", "g13q23sq005", "g13q23sq012", "g13q23sq017"]
         school_ressources:
           label: "Ressources de l'école"
-          category: "competence"
+          category: "RO"
           items: ["g13q23sq003", "g13q23sq008", "g13q23sq013", "g13q23sq018"]
         decision_making:
           label: "Participation aux décisions"
-          category: "competence"
+          category: "RO"
           items: ["g13q23sq004", "g13q23sq009", "g13q23sq014"]
         instructional_innovation:
           label: "Innovation pédagogique"
-          category: "competence"
+          category: "RO"
           items: ["g13q23sq005", "g13q23sq010", "g13q23sq015", "g13q23sq019"]
   cess:
     id: "g09"
@@ -283,15 +283,15 @@ scales:
     scoring:
       total:
         enabled: true
-        category: "competence"
+        category: "unused"
       subscales:
         emotional:
           label: "Support émotionnel"
-          category: "competence"
+          category: "RO"
           items: ["g09q38sq001", "g09q38sq002", "g09q38sq003"]
         instrumental:
           label: "Support instrumental"
-          category: "competence"
+          category: "RO"
           items: ["g09q38sq004", "g09q38sq005"]
   rscts:
     id: "g14"
@@ -319,8 +319,13 @@ scales:
         reversed: true 
     scoring:
       total:
-        enabled: true
-        category: "competence"
+        enabled: false
+        category: "unused"
+      subscales:
+        soutien:
+          label: "Soutien, accessibilité et compétence des directeurs"
+          category: "RO"
+          items: ["g14q24sq001", "g14q24sq002", "g14q24sq003", "g14q24sq004", "g14q24sq005", "g14q24sq006", "g14q24sq007", "g14q24sq008"]
   valcons:
     id: "g15"
     label: "Consonance des Valeurs (ValCons)"
@@ -338,7 +343,7 @@ scales:
     scoring:
       total:
         enabled: true
-        category: "competence"
+        category: "RO"
   psm:
     id: "g16"
     label: "Motivation des élèves (PSM)"
@@ -364,19 +369,19 @@ scales:
     scoring:
       total:
         enabled: true
-        category: "competence"
+        category: "unused"
       subscales:
         effort:
           label: "Effort"
-          category: "competence"
+          category: "RO"
           items: ["g16q26sq001", "g16q26sq002", "g16q26sq005"]
         engagement:
           label: "Engagement"
-          category: "competence"
+          category: "RO"
           items: ["g16q26sq003", "g16q26sq004", "g16q26sq006"]
         interet:
           label: "Intérêt général"
-          category: "competence"
+          category: "RO"
           items: ["g16q26sq007"]
   rs:
     id: "g17"
@@ -409,21 +414,21 @@ scales:
       subscales:
         ambiguite_role:
           label: "Ambiguïté des Rôles"
-          category: "competence"
+          category: "CO"
           items: ["g17q27sq001", "g17q27sq002", "g17q27sq003", "g17q27sq004"]
         conflit_role:
           label: "Conflit de Rôles"
-          category: "competence"
+          category: "CO"
           items: ["g17q27sq005","g17q27sq006","g17q27sq007"]
         surcharge_role:
           label: "Surcharge des Rôles"
-          category: "competence"
+          category: "CO"
           items: ["g17q27sq008", "g17q27sq009"]
   wfc:
     id: "g18"
     label: "Vie Privée / Travail (WFC)"
     description: "description WFC"
-    reference: "référence WFC"
+    reference: "Netemeyer, R. G., Boles, J. S., & McMurrian, R. (1996). Development and validation of work–family conflict and family–work conflict scales. Journal of applied psychology, 81(4), 400."
     type: "likert_7"
     response_prefix: "AO0"
     items:
@@ -452,17 +457,17 @@ scales:
       subscales:
         work_family_conflict_scale:
           label: "Conflits Travail - Vie Privée"
-          category: "competence"
+          category: "CO"
           items: ["g18q28sq001","g18q28sq002","g18q28sq003","g18q28sq004","g18q28sq005"]
         family_work_conflict_scale:
           label: "Conflits Vie Privée - Travail"
-          category: "competence"
+          category: "CO"
           items: ["g18q28sq006","g18q28sq007","g18q28sq008","g18q28sq009","g18q28sq010"]
   tipi:
     id: "g19"
     label: "Personnalité (TIPI)"
     description: "texte de description de TIPI"
-    reference: "texte de référence bibliographique de TIPI"
+    reference: "Storme, M., Tavani, J.-L., & Myszkowski, N. (2016). Psychometric properties of the French Ten-Item Personality Inventory (TIPI). Journal of Individual Differences, 37(2), 81-87."
     type: "likert_7"
     response_prefix: "AO0"
     items:
@@ -491,29 +496,29 @@ scales:
       subscales:
         extraversion:
           label: "Extraversion"
-          category: "competence"
+          category: "CI"
           items: ["g19q29sq001", "g19q29sq006"]
         agrableness:
           label: "Agréabilité"
-          category: "competence"
+          category: "CI"
           items: ["g19q29sq002", "g19q29sq007"]
         conscientiousness:
           label: "Conscienciosité"
-          category: "competence"
+          category: "CI"
           items: ["g19q29sq003", "g19q29sq008"]
         stab_em:
           label: "Stabilité"
-          category: "competence"
+          category: "CI"
           items: ["g19q29sq004", "g19q29sq009"]
         openness:
           label: "Ouverture"
-          category: "competence"
+          category: "CI"
           items: ["g19q29sq005", "g19q29sq010"]
   twbsworkload:
     id: "g20"
     label: "Charge de travail (TWBS Workload)"
     description: "texte de description de TWBS Workload"
-    reference: "texte de référence bibliographique de TWBS Workload"
+    reference: "Collie, R. J., Shapka, J. D., Perry, N. E., & Martin, A. J. (2015). Teacher Well-Being: Exploring Its Components and a Practice-Oriented Scale. Journal of Psychoeducational Assessment, 33(8), 744-756. https://doi.org/10.1177/0734282915587990"
     type: "likert_7"
     response_prefix: "AO0"
     items:
@@ -534,33 +539,77 @@ scales:
       subscales:
         notes:
           label: "Notes"
-          category: "competence"
+          category: "CO"
           items: ["g20q30sq001"]
         temps:
           label: "Temps"
-          category: "competence"
+          category: "CO"
           items: ["g20q30sq002"]
         admin:
           label: "Admin"
-          category: "competence"
+          category: "CO"
           items: ["g20q30sq003"]
         reunions:
           label: "Réunions"
-          category: "competence"
+          category: "CO"
           items: ["g20q30sq004"]
         extrajob:
           label: "Extra Job"
-          category: "competence"
+          category: "CO"
           items: ["g20q30sq005"]
         cours:
           label: "Cours"
-          category: "competence"
+          category: "CO"
           items: ["g20q30sq006"]
+  qaes_1:
+    id: "g17"
+    label: "Perturbations en classe - perte de temps (QAES partie 1)"
+    description: "texte de description de QAES partie 1"
+    reference: "texte de référence bibliographique de QAES partie 1"
+    type: "likert_6"
+    response_prefix: "AO0"
+    items:
+      - id: "g17q39sq001"
+        reversed: false
+      - id: "g17q39sq002"
+        reversed: true
+      - id: "g17q39sq003"
+        reversed: true
+      - id: "g17q39sq004"
+        reversed: true
+      - id: "g17q39sq005"
+        reversed: true
+    scoring:
+      total:
+        enabled: true
+        category: "CO"
+  qaes_2:
+    id: "g17"
+    label: "Perturbations en classe - indiscipline scolaire (QAES partie 2)"
+    description: "texte de description de QAES partie 2"
+    reference: "texte de référence bibliographique de QAES partie 2"
+    type: "likert_5"
+    response_prefix: "AO0"
+    items:
+      - id: "g17q40sq001"
+        reversed: true
+      - id: "g17q40sq002"
+        reversed: true
+      - id: "g17q40sq003"
+        reversed: true
+      - id: "g17q40sq004"
+        reversed: true
+      - id: "g17q40sq005"
+        reversed: true
+    scoring:
+      total:
+        enabled: true
+        category: "CO"
   uwes:
     id: "g21"
     label: "Engagement professionnel (UWES)"
     description: "texte de description de UWES"
-    reference: "texte de référence bibliographique de UWES"
+    reference: "Zecca, G., Györkös, C., Becker, J., Massoudi, K., de Bruin, G. P., & Rossier, J. (2015). Validation of the French Utrecht Work Engagement Scale and its relationship with personality traits and impulsivity. European Review of Applied Psychology, 65(1), 19-28."
     type: "likert_7"
     response_prefix: "AO0"
     items:
@@ -585,25 +634,25 @@ scales:
     scoring:
       total:
         enabled: true
-        category: "competence"
+        category: "unused"
       subscales:
         vigor:
           label: "Vigueur"
-          category: "competence"
+          category: "MOT"
           items: ["g21q31sq001", "g21q31sq002", "g21q31sq003"]
         dedication:
           label: "Dévouement"
-          category: "competence"
+          category: "MOT"
           items: ["g21q31sq004", "g21q31sq005", "g21q31sq006"]
         absorption:
           label: "Absorption cognitive"
-          category: "competence"
+          category: "MOT"
           items: ["g21q31sq007", "g21q31sq008", "g21q31sq009"]
   tes:
     id: "g07"
     label: "Emotions professionnelles (TES)"
     description: "texte de description de TES"
-    reference: "texte de référence bibliographique de TES"
+    reference: "Audrin, C., Hascoët, M., Burel, N., & Gay, P. (in press). French validation of the Teacher Emotion Scale (TES-FR). European Journal of Psychological Assessment. https://doi.org/10.1027/1015-5759/a000882"
     type: "likert_4"
     response_prefix: "AO0"
     items:
@@ -636,21 +685,21 @@ scales:
       subscales:
         joie:
           label: "Joie"
-          category: "competence"
+          category: "EMO"
           items: ["g07q19sq001", "g07q19sq002", "g07q19sq003", "g07q19sq004"]
         colere:
           label: "Colère"
-          category: "competence"
+          category: "EMO"
           items: ["g07q19sq005", "g07q19sq006", "g07q19sq007", "g07q19sq008"]
         anxiete:
           label: "Anxiété"
-          category: "competence"
+          category: "EMO"
           items: ["g07q19sq009", "g07q19sq010", "g07q19sq011", "g07q19sq012"]
   smbm:
     id: "g08"
     label: "Epuisement professionnel (SMBM)"
     description: "texte de description de SMBM"
-    reference: "texte de référence bibliographique de SMBM"
+    reference: "Sassi, N., & Neveu, J. P. (2010). Translation and evaluation of a new measurement of burnout: the Shirom-Melamed Burnout Measure. CANADIAN JOURNAL OF BEHAVIOURAL SCIENCE-REVUE CANADIENNE DES SCIENCES DU COMPORTEMENT, 42(3), 177-184."
     type: "likert_7"
     response_prefix: "AO0"
     items:
@@ -685,25 +734,25 @@ scales:
     scoring:
       total:
         enabled: true
-        category: "competence"
+        category: "unused"
       subscales:
         fatigue_physique:
           label: "Fatigue physique"
-          category: "competence"
+          category: "TROUBLES"
           items: ["g08q20sq001", "g08q20sq002", "g08q20sq003", "g08q20sq004","g08q20sq005","g08q20sq006"]
         lassitude_cognitive:
           label: "Lassitude cognitive"
-          category: "competence"
+          category: "TROUBLES"
           items: ["g08q20sq007", "g08q20sq008", "g08q20sq009", "g08q20sq010","g08q20sq011"]
         epuisement_emotionnel:
           label: "Epuisement émotionnel"
-          category: "competence"
+          category: "TROUBLES"
           items: ["g08q20sq012", "g08q20sq013", "g08q20sq014"]
   pss4:
     id: "g22"
     label: "Stress (PSS4)"
     description: "texte de description de PSS4"
-    reference: "texte de référence bibliographique de PSS4"
+    reference: "Dupret, E., & Bocéréan, C. (2013). La mesure du stress en milieu professionnel avec l’échelle de stress perçu (Perceived Stress Scale): Pertinence des versions en dix et quatre items. Psychologie du Travail et des Organisations, 19(4), 362–384. https://doi.org/10.1016/S1420-2530(16)30049-8 \n\n Lesage, F.-X., Berjot, S., & Deschamps, F. (2012). Psychometric properties of the French versions of the Perceived Stress Scale. International Journal of Occupational Medicine and Environmental Health, 25(2), 178–184. https://doi.org/10.2478/s13382-012-0024-8"
     type: "likert_5"
     response_prefix: "AO0"
     items:
@@ -718,23 +767,23 @@ scales:
     scoring:
       total:
         enabled: true
-        category: "competence"
+        category: "TROUBLES"
   twbi:
     id: "g10"
     label: "Bien-être Enseignant (TWBI)"
     description: "texte de description de TWBI"
-    reference: "texte de référence bibliographique de TWBI"
+    reference: "Chen, J., Zhang, L., Li, X., Li, Y., Xu, W., & Yan, Z. (2024). The multidimensional teacher well-being: a mixed-methods approach. Teachers and Teaching, 30(6), 724-744."
     type: "likert_6"
     response_prefix: "AO0"
     items:
       - id: "g10q22sq001"
-        reversed: false
+        reversed: true
       - id: "g10q22sq002"
-        reversed: false
+        reversed: true
       - id: "g10q22sq003"
-        reversed: false
+        reversed: true
       - id: "g10q22sq004"
-        reversed: false
+        reversed: true
       - id: "g10q22sq005"
         reversed: false
       - id: "g10q22sq006"
@@ -770,33 +819,33 @@ scales:
     scoring:
       total:
        enabled: true
-       category: "competence"
+       category: "unused"
       subscales:
         physical_wellbeing:
           label: "Bien-être physique"
-          category: "competence"
+          category: "BIENETRE"
           items: ["g10q22sq001", "g10q22sq002", "g10q22sq003", "g10q22sq004"]
         emotional_psychological_wellbeing:
           label: "Bien-être émotionnel"
-          category: "competence"
+          category: "BIENETRE"
           items: ["g10q22sq005", "g10q22sq006", "g10q22sq007", "g10q22sq008"]
         cognitive_wellbeing:
           label: "Bien-être cognitif"
-          category: "competence"
+          category: "BIENETRE"
           items: ["g10q22sq009", "g10q22sq010", "g10q22sq011", "g10q22sq012"]
         social_wellbeing:
           label: "Bien-être social"
-          category: "competence"
+          category: "BIENETRE"
           items: ["g10q22sq013", "g10q22sq014", "g10q22sq015", "g10q22sq016"]
         spiritual_wellbeing:
           label: "Bien-être spirituel"
-          category: "competence"
+          category: "BIENETRE"
           items: ["g10q22sq017", "g10q22sq018", "g10q22sq019", "g10q22sq020"]
   tss:
     id: "g23"
     label: "Satisfaction professionnelle (TSS)"
     description: "Description TSS"
-    reference: "Référence APA TSS"
+    reference: "Ho, C. L., & Au, W. T. (2006). Teaching satisfaction scale: Measuring job satisfaction of teachers. Educational and psychological Measurement, 66(1), 172-185."
     type: "likert_5"
     response_prefix: "AO0"
     items:
@@ -813,12 +862,12 @@ scales:
     scoring:
       total:
         enabled: true
-        category: "competence"
+        category: "SAT"
   pers:
     id: "g24"
     label: "Persévérance dans le métier (PERS)"
     description: "Description PERS"
-    reference: "Source APA PERS"
+    reference: "Hackett, R. D., Lapierre, L. M., & Hausdorf, P. A. (2001). Understanding the links between work commitment constructs. Journal of Vocational Behavior, 58, 392–413."
     type: "likert_7"
     response_prefix: "AO0"
     items:
@@ -845,12 +894,12 @@ scales:
     scoring:
       total:
         enabled: true
-        category: "competence"
+        category: "PER"
   tsesvalls:
     id: "g06"
     label: "Efficacité perçue (TSES Valls)"
     description: "texte de description de TSES Valls"
-    reference: "texte de référence bibliographique de TSES Valls aux normes APA7"
+    reference: "Valls, M., Bonvin, P., & Benoit, V. (2020). Psychometric properties of the French version of the Teachers’ Sense of Efficacy Scale (TSES-12f). European Review of Applied Psychology, 70(3), 100551. https://doi.org/10.1016/j.erap.2020.100551"
     type: "likert_9"
     response_prefix: "AO0"
     items:
@@ -881,25 +930,25 @@ scales:
     scoring:
       total:
         enabled: true
-        category: "competence"
+        category: "unused"
       subscales:
         student_engagement:
-          label: "Efficacité à engaer les élèves"
-          category: "competence"
+          label: "Efficacité à engager les élèves"
+          category: "EFF"
           items: ["g06q18sq002", "g06q18sq003", "g06q18sq004", "g06q18sq011"]
         instructional_strategies:
           label: "Efficacité des stratégies pédagogiques"
-          category: "competence"
+          category: "EFF"
           items: ["g06q18sq005", "g06q18sq009", "g06q18sq010", "g06q18sq012"]
         classroom_management:
           label: "Efficacité dans la gestion de classe"
-          category: "competence"
+          category: "EFF"
           items: ["g06q18sq001", "g06q18sq006", "g06q18sq007", "g06q18sq008"]
   ocq:
     id: "g25"
-    label: "Attachement organisationnel OCQ"
+    label: "Attachement organisationnel (OCQ)"
     description: "texte de description de OCQ"
-    reference: "texte de référence bibliographique de OCQ aux normes APA7"
+    reference: "Mowday, R. T., Steers, R. M., & Porter, L. W. (1979). The measurement of organizational commitment. Journal of vocational behavior, 14(2), 224-247. \n\n Mathieu, A., Bruvold, N. T., & Ritchey, P. N. (2000). Subcultural research on organizational commitment with the 15 OCQ invariant instrument. Journal of Personal Selling & Sales Management, 20(3), 129-138."
     type: "likert_7"
     response_prefix: "AO0"
     items:
@@ -923,8 +972,13 @@ scales:
         reversed: false
     scoring:
       total:
-        enabled: true
-        category: "competence"
+        enabled: false
+        category: "unused"
+      subscales:
+        engagement_affectif:
+          label: "Engagement affectif"
+          category: "ATT"
+          items: ["g25q35sq001", "g25q35sq002", "g25q35sq003", "g25q35sq004", "g25q35sq005", "g25q35sq006", "g25q35sq007", "g25q35sq008", "g25q35sq009"]
 
 validation:
   required_fields:
@@ -933,14 +987,18 @@ validation:
   min_responses:
     cps: 1.0
     erq: 1.0
-    schoolclim: 1.0
-    hiersupp: 1.0
+    prep: 1.0
+    sleq: 1.0
+    cess: 1.0
+    rscts: 1.0
     valcons: 1.0
     psm: 1.0
     rs: 1.0
     wfc: 1.0
     tipi: 1.0
     twbsworkload: 1.0
+    qaes_1: 1.0
+    qaes_2: 1.0
     uwes: 1.0
     tes: 1.0
     smbm: 1.0
@@ -953,14 +1011,18 @@ validation:
   value_ranges:
     cps: [1, 7]
     erq: [1, 7]
-    schoolclim: [1, 5]
-    hiersupp: [1, 5]
+    prep: [1, 5]
+    sleq: [1, 5]
+    cess: [1, 5]
+    rscts: [1, 5]
     valcons: [1, 6]
     psm: [1, 7]
     rs: [1, 7]
     wfc: [1, 7]
     tipi: [1, 7]
     twbsworkload: [1, 7]
+    qaes_1: [1, 6]
+    qaes_2: [1, 5]
     uwes: [1, 7]
     tes: [1, 4]
     smbm: [1, 7]
