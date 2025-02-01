@@ -30,7 +30,7 @@ send_notification <- function(success) {
 
 # Exécution de la commande quarto avec try-catch
 tryCatch({
-  cmd_output <- system("quarto render dashboard.qmd", intern = TRUE)
+  cmd_output <- system("quarto render reporting.qmd", intern = TRUE)
   # Si on arrive ici, c'est que la commande a réussi
   send_notification(TRUE)
 }, error = function(e) {
