@@ -45,7 +45,7 @@ main <- function(survey_id, credentials, groups_config) {
     
     # 3. Traitement des échelles et des données démographiques en parallèle
     log_info("\nCalcul des scores")
-    scales_data <- prepare_all_scales_scores(std_data, config)
+    scales_data <- process_data(std_data, config)
     n_rows <- nrow(scales_data)
     # Nombre d'échelles prises en compte
     n_scales <- scales_data |> 
@@ -53,11 +53,11 @@ main <- function(survey_id, credentials, groups_config) {
       nrow()
     # Nombre de scores différents calculés, basé sur scale_label et score_type_label
     n_scores <- scales_data |> 
-      distinct(scale_label, score_type_label) |> 
+      distinct(scale_label, score_name) |> 
       nrow()
     # Nombre de passations basées sur person_id_secure et timestamp
     n_administration <- scales_data |> 
-      distinct(person_id_secure, timestamp) |> 
+      distinct(person_id, timestamp) |> 
       nrow()
     log_info(glue("\nCalcul terminé: {n_rows} lignes"))
     log_info("\nPréparation des données démographiques")
@@ -70,11 +70,11 @@ main <- function(survey_id, credentials, groups_config) {
       left_join(
         demographics_data,
         by = c(
-          "person_id_secure",
+          "person_id",
           "timestamp", 
           "month",
-          "group_id",
-          "subgroup_id"
+          "school_code",
+          "team_code"
         )
       )
     log_info("\nJointure terminée")
@@ -84,12 +84,12 @@ main <- function(survey_id, credentials, groups_config) {
     labels_data <- get_group_labels(groups_config)
     processed_data <- processed_data %>%
       left_join(
-        labels_data$group_labels,
-        by = "group_id"
+        labels_data$school_labels,
+        by = "school_code"
       ) %>%
       left_join(
-        labels_data$subgroup_labels,
-        by = c("group_id", "subgroup_id")
+        labels_data$team_labels,
+        by = c("school_code", "team_code")
       )
     
     log_info("\nJointure terminée")

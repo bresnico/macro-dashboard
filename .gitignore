@@ -60,3 +60,12 @@ temp/
 tests/
 tests/**
 *.rds
+
+# Archive
+archive/
+archive/**
+
+# Generated outputs
+outputs/
+outputs/**
+!outputs/.gitkeep

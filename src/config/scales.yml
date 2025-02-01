@@ -1,19 +1,12 @@
 # Configuration globale
-fake_data: false
 identification:
-  personal_id:
-    group: "g01"
-    question: "q13"
-  group_code: "groupecode"
-  email:
-    group: "g00"
-    question: "q02"
-
-temporal:
-  source_field: "submitdate"
-  format: "YYYY-MM-DD HH:mm:ss"
-  default_grouping: "month"
-
+  personal_id: "g01q13"
+  school_code: "groupecode"
+  team_code: "grouperef"
+  timestamp:
+    id: "submitdate"
+    label: "timestamp"
+    format: "YYYY-MM-DD HH:mm:ss"
 demographics:
   age:
     group: "g05"
@@ -47,7 +40,13 @@ demographics:
     labels:
       AO01: "0-5"
       AO02: "6-10"
-      AO03: "10+"
+      AO03: "11-15"
+      AO04: "16-20"
+      AO05: "21-25"
+      AO06: "26-30"
+      AO07: "31-35"
+      AO08: "36-40"
+      AO09: "41+"
 
 scale_types:
   likert_4:
@@ -155,7 +154,9 @@ scales:
       - id: "g12q22sq010"
         reversed: false
     scoring:
-      total: false
+      total:
+        enabled: false
+        category: "unused"
       subscales:
         suppression:
           label: "Suppression émotionnelle"
@@ -410,7 +411,9 @@ scales:
       - id: "g17q27sq009"
         reversed: false
     scoring:
-      total: false
+      total:
+        enabled: false
+        category: "unused"
       subscales:
         ambiguite_role:
           label: "Ambiguïté des Rôles"
@@ -453,7 +456,9 @@ scales:
       - id: "g18q28sq010"
         reversed: false
     scoring:
-      total: false
+      total:
+        enabled: false
+        category: "unused"
       subscales:
         work_family_conflict_scale:
           label: "Conflits Travail - Vie Privée"
@@ -492,7 +497,9 @@ scales:
       - id: "g19q29sq010"
         reversed: true
     scoring:
-      total: false
+      total:
+        enabled: false
+        category: "unused"
       subscales:
         extraversion:
           label: "Extraversion"
@@ -535,7 +542,9 @@ scales:
       - id: "g20q30sq006"
         reversed: false
     scoring:
-      total: false
+      total:
+        enabled: false
+        category: "unused"
       subscales:
         notes:
           label: "Notes"
@@ -681,7 +690,9 @@ scales:
       - id: "g07q19sq012"
         reversed: false
     scoring:
-      total: false
+      total:
+        enabled: false
+        category: "unused"
       subscales:
         joie:
           label: "Joie"
@@ -818,8 +829,8 @@ scales:
         reversed: false
     scoring:
       total:
-       enabled: true
-       category: "unused"
+        enabled: true
+        category: "unused"
       subscales:
         physical_wellbeing:
           label: "Bien-être physique"

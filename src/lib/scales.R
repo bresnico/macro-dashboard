@@ -1,287 +1,260 @@
-# Fonctions utilitaires ----
+# work in progress
+# labels des échelles
+# calcul intégrée des items inversés
+# ajout des interquartiles
+# respect de la logique du script
+# A temps perdu : check le yaml.
+# check comment les groups.yml est utilisé
+# regarde comment faire un score Z et le ranking dans le qmd... sur le csv existant
 
-clean_teacher_id <- function(full_id) {
-  ifelse(
-    grepl("-", full_id),
-    sub("^(.+?)-.*$", "\\1", full_id),
-    full_id
-  )
-}
+# initiation pour les tests
+# config <- yaml::read_yaml("src/config/scales.yml")
+# d <- readRDS("d.RDS")
 
-invert_score <- function(score, scale_type, config) {
-  scale_limits <- config$scale_types[[scale_type]]
-  if (is.null(scale_limits)) {
-    warning(sprintf("Type d'échelle '%s' non trouvé dans la configuration", scale_type))
-    return(score)
-  }
+# Préparation des données
+
+prepare_data <- function(data_raw, config) {
+  # Extraire les identifiants depuis la configuration
+  personal_id_field <- config$identification$personal_id
+  school_code_field <- config$identification$school_code
+  team_code_field <- config$identification$team_code
+  timestamp_field <- config$identification$timestamp$id
+  timestamp_format <- config$identification$timestamp$format
   
-  min_value <- scale_limits$min_value
-  max_value <- scale_limits$max_value
-  (max_value + min_value) - score
-}
-
-# Préparation des données ----
-
-prepare_numeric_responses <- function(data, scale_name, config, debug = FALSE) {
-  scale_config <- config$scales[[scale_name]]
-  items_info <- scale_config$items
-  
-  processed_data <- data
-  
-  for(item in items_info) {
-    col_name <- item$id
-    
-    if(debug) {
-      cat(sprintf("Traitement de l'item %s (inversé: %s)\n", 
-                  col_name, 
-                  ifelse(item$reversed, "oui", "non")))
-    }
-    
-    # Conversion numérique
-    processed_data[[col_name]] <- as.numeric(
-      sub(scale_config$response_prefix, "", processed_data[[col_name]])
+  # Convertir le timestamp
+  data_raw <- data_raw %>%
+    mutate(
+      person_id = .data[[personal_id_field]],
+      school_code = .data[[school_code_field]],
+      team_code = .data[[team_code_field]],
+      timestamp = ymd_hms(.data[[timestamp_field]]),
+      month = format(timestamp, "%B %Y")
     )
-    
-    # Inversion si nécessaire
-    if(isTRUE(item$reversed)) {
-      if(debug) cat(sprintf("Inversion des scores pour l'item %s\n", col_name))
-      processed_data[[col_name]] <- invert_score(
-        processed_data[[col_name]], 
-        scale_config$type,
-        config
-      )
-    }
-  }
   
-  return(processed_data)
+  return(data_raw)
 }
 
-# Préparation des métadonnées ----
-
-prepare_scale_labels <- function(scale_names, config) {
-  map_dfr(scale_names, function(scale_name) {
+calculate_theoretical_quartiles <- function(config) {
+  scales <- names(config$scales)
+  
+  quartiles_list <- lapply(scales, function(scale_name) {
     scale_config <- config$scales[[scale_name]]
     
-    # Labels des sous-scores
-    subscore_labels <- NULL
-    if(!is.null(scale_config$scoring$subscales)) {
-      subscore_labels <- map_dfr(names(scale_config$scoring$subscales), function(subscale_name) {
-        tibble(
-          scale = scale_name,
-          scale_label = scale_config$label,
-          scale_description = scale_config$description,
-          scale_reference = scale_config$reference,
-          score_type = subscale_name,
-          score_type_label = scale_config$scoring$subscales[[subscale_name]]$label
-        )
-      })
-    }
+    # Obtenir les valeurs min et max de l'échelle
+    scale_type <- scale_config$type
+    min_value <- config$scale_types[[scale_type]]$min_value
+    max_value <- config$scale_types[[scale_type]]$max_value
     
-    # Label du score total
-    total_label <- NULL
-    if(is.list(scale_config$scoring$total) && isTRUE(scale_config$scoring$total$enabled)) {
-      total_label <- tibble(
-        scale = scale_name,
-        scale_label = scale_config$label,
-        scale_description = scale_config$description,
-        scale_reference = scale_config$reference,
-        score_type = "total_score",
-        score_type_label = "Score global"
-      )
-    }
+    # Calculer les quartiles théoriques
+    Q1 <- min_value + (max_value - min_value) * 0.25
+    Q2 <- min_value + (max_value - min_value) * 0.50
+    Q3 <- min_value + (max_value - min_value) * 0.75
     
-    bind_rows(subscore_labels, total_label)
+    # Retourner un data frame avec les valeurs
+    data.frame(
+      scale = scale_name,
+      min_value = min_value,
+      max_value = max_value,
+      Q1 = Q1,
+      Q2 = Q2,
+      Q3 = Q3
+    )
   })
-}
-
-prepare_score_categories <- function(config) {
-  map_dfr(names(config$scales), function(scale_name) {
-    scale_config <- config$scales[[scale_name]]
-    scoring_config <- scale_config$scoring
-    
-    # Catégories pour score total
-    total_category <- if(is.list(scoring_config$total) && 
-                         isTRUE(scoring_config$total$enabled)) {
-      tibble(
-        scale = scale_name,
-        score_type = "total_score",
-        jdr_category = scoring_config$total$category
-      )
-    }
-    
-    # Catégories pour subscales
-    subscale_categories <- if(!is.null(scoring_config$subscales)) {
-      map_dfr(names(scoring_config$subscales), function(subscale_name) {
-        tibble(
-          scale = scale_name,
-          score_type = subscale_name,
-          jdr_category = scoring_config$subscales[[subscale_name]]$category
-        )
-      })
-    }
-    
-    bind_rows(total_category, subscale_categories)
-  })
-}
-
-# Traitement des scores ----
-
-process_single_scale <- function(data, scale_name, config, debug = TRUE) {
-  if(debug) cat("\nTraitement de l'échelle:", scale_name, "\n")
   
-  # Préparation numérique
-  data <- prepare_numeric_responses(data, scale_name, config)
+  # Combiner les résultats en un seul data frame
+  quartiles_df <- do.call(rbind, quartiles_list)
+  
+  return(quartiles_df)
+}
+
+# Calcul des scores pour une échelle
+
+calculate_scale_scores <- function(data, scale_name, config) {
   scale_config <- config$scales[[scale_name]]
+  
+  # Récupérer les IDs des items
   item_ids <- sapply(scale_config$items, function(x) x$id)
   
-  # Préparation des données de base
-  scores_data <- data %>%
-    mutate(
-      person_id = clean_teacher_id(g01q13),
-      person_id_secure = g01q13,
-      group_id = groupecode,
-      subgroup_id = ifelse(is.na(grouperef) | grouperef == "", "all", grouperef),
-      timestamp = ymd_hms(datestamp),
-      month = floor_date(timestamp, "month")
-    ) %>%
-    select(timestamp, month, person_id, person_id_secure, 
-           group_id, subgroup_id, all_of(item_ids))
+  # Préfixe des réponses
+  response_prefix <- scale_config$response_prefix
   
-  # Calcul des scores
-  if(is.list(scale_config$scoring$total) && 
-     isTRUE(scale_config$scoring$total$enabled)) {
-    scores_data <- scores_data %>%
-      rowwise() %>%
-      mutate(
-        total_score = if(all(is.na(c_across(all_of(item_ids))))) {
-          -99
-        } else {
-          mean(c_across(all_of(item_ids)), na.rm = TRUE)
-        }
-      ) %>%
-      ungroup()
-  }
+  # Extraire les données pertinentes
+  scale_data <- data %>%
+    select(person_id, timestamp, month, all_of(item_ids))
   
-  if(!is.null(scale_config$scoring$subscales)) {
-    for(subscale_name in names(scale_config$scoring$subscales)) {
-      subscale_items <- scale_config$scoring$subscales[[subscale_name]]$items
-      scores_data <- scores_data %>%
-        rowwise() %>%
-        mutate(
-          !!subscale_name := if(all(is.na(c_across(all_of(subscale_items))))) {
-            -99
-          } else {
-            mean(c_across(all_of(subscale_items)), na.rm = TRUE)
-          }
-        ) %>%
-        ungroup()
+  # Obtenir les valeurs min et max de l'échelle
+  scale_type <- scale_config$type
+  min_value <- config$scale_types[[scale_type]]$min_value
+  max_value <- config$scale_types[[scale_type]]$max_value
+  
+  # Traiter chaque item
+  for (item in scale_config$items) {
+    item_id <- item$id
+    reversed <- item$reversed
+    # Extraire la valeur numérique de la réponse
+    # Suppression du préfixe et conversion en numérique
+    scale_data[[item_id]] <- as.numeric(sub(response_prefix, "", scale_data[[item_id]]))
+    # Inverser la valeur si nécessaire
+    if (reversed) {
+      scale_data[[item_id]] <- max_value + min_value - scale_data[[item_id]]
     }
   }
   
-  # Préparation format long et calcul des références
-  score_columns <- setdiff(
-    names(scores_data),
-    c("timestamp", "month", "person_id", "person_id_secure", 
-      "group_id", "subgroup_id", item_ids)
-  )
+  # Calculer le score total si activé
+  scores <- scale_data %>%
+    select(person_id, timestamp, month)
   
-  scores_long <- scores_data %>%
-    select(timestamp, month, person_id, person_id_secure, 
-           group_id, subgroup_id, all_of(score_columns)) %>%
+  score_info_list <- list()  # Liste pour stocker les informations des scores
+  
+  if (isTRUE(scale_config$scoring$total$enabled)) {
+    total_score_name <- "total_score"
+    scores <- scores %>%
+      mutate(
+        !!total_score_name := rowMeans(scale_data[, item_ids, drop = FALSE], na.rm = TRUE)
+      )
+    # Ajouter les informations du score total
+    score_info_list[[total_score_name]] <- list(
+      score_label = "Score total",
+      category = scale_config$scoring$total$category
+    )
+  }
+  
+  # Calculer les sous-scores
+  if (!is.null(scale_config$scoring$subscales)) {
+    for (subscale_name in names(scale_config$scoring$subscales)) {
+      subscale_items <- scale_config$scoring$subscales[[subscale_name]]$items
+      subscale_label <- scale_config$scoring$subscales[[subscale_name]]$label
+      category <- scale_config$scoring$subscales[[subscale_name]]$category
+      
+      if (length(subscale_items) == 1) {
+        # Si la sous-échelle n'a qu'un seul item, on prend directement la valeur de l'item
+        scores[[subscale_name]] <- scale_data[[subscale_items]]
+      } else {
+        # Sinon, on calcule la moyenne
+        scores[[subscale_name]] <- rowMeans(scale_data[, subscale_items, drop = FALSE], na.rm = TRUE)
+      }
+      
+      # Ajouter les informations du sous-score
+      score_info_list[[subscale_name]] <- list(
+        score_label = subscale_label,
+        category = category
+      )
+    }
+  }
+  
+  # Transformer en format long
+  scores_long <- scores %>%
     pivot_longer(
-      cols = all_of(score_columns),
-      names_to = "score_type",
+      cols = -c(person_id, timestamp, month),
+      names_to = "score_name",
       values_to = "score_value"
     ) %>%
-    # Références sous-groupe
-    group_by(group_id, subgroup_id, month, score_type) %>%
     mutate(
-      subgroup_n = sum(score_value != -99, na.rm = TRUE),
-      subgroup_reference = if(subgroup_n >= 10) {
-        mean(score_value[score_value != -99], na.rm = TRUE)
-      } else {
-        NA_real_
-      },
-      subgroup_sd = if(subgroup_n >= 10) {
-        sd(score_value[score_value != -99], na.rm = TRUE)
-      } else {
-        NA_real_
-      }
-    ) %>%
-    ungroup() %>%
-    # Références groupe
-    group_by(group_id, month, score_type) %>%
-    mutate(
-      group_n = sum(score_value != -99, na.rm = TRUE),
-      group_reference = if(group_n >= 10) {
-        mean(score_value[score_value != -99], na.rm = TRUE)
-      } else {
-        NA_real_
-      },
-      group_sd = if(group_n >= 10) {
-        sd(score_value[score_value != -99], na.rm = TRUE)
-      } else {
-        NA_real_
-      },
-      quartile = if(group_n >= 10) {
-        ntile(score_value[score_value != -99], 4)
-      } else {
-        NA_integer_
-      },
-      scale = scale_name
-    ) %>%
-    ungroup()
+      scale = scale_name,
+      scale_label = scale_config$label
+    )
+  
+  # Convertir score_info_list en data frame
+  score_info_df <- enframe(score_info_list, name = "score_name", value = "score_info") %>%
+    unnest_wider(score_info)
+  
+  # Joindre les informations au data frame des scores
+  scores_long <- scores_long %>%
+    left_join(score_info_df, by = "score_name")
   
   return(scores_long)
 }
+# Compilation des scores pour toutes les échelles
 
-# Standardisation des types de données ----
-
-standardize_data_types <- function(scores) {
-  scores %>%
-    mutate(
-      timestamp = as.Date(timestamp),
-      month = format(month, "%B %Y"),
-      across(c(score_value, 
-               subgroup_reference, subgroup_sd,
-               group_reference, group_sd), 
-             ~as.numeric(.x)),
-      across(c(subgroup_n, group_n), as.integer),
-      quartile = as.integer(quartile)
-    )
+compile_all_scores <- function(data, config) {
+  scale_names <- names(config$scales)
+  
+  all_scores <- lapply(scale_names, function(scale_name) {
+    calculate_scale_scores(data, scale_name, config)
+  })
+  
+  all_scores_df <- bind_rows(all_scores)
+  
+  return(all_scores_df)
 }
 
-# Fonction principale ----
+# Préparation des scores par établissement et équipes d'établissement
 
-prepare_all_scales_scores <- function(data, config, debug = FALSE) {
-  # Préparation des métadonnées
-  scale_names <- names(config$scales)
-  scale_labels <- prepare_scale_labels(scale_names, config)
-  categories <- prepare_score_categories(config)
+calculate_group_means <- function(all_scores) {
+  # Calcul des moyennes par école
+  school_means <- all_scores %>%
+    group_by(school_code, scale, score_name) %>%
+    summarize(school_mean = mean(score_value, na.rm = TRUE), .groups = "drop")
   
-  # Traitement des échelles
-  all_scores <- map_dfr(scale_names, 
-                        ~process_single_scale(data, .x, config, debug))
+  # Calcul des moyennes par équipe (école + équipe)
+  team_means <- all_scores %>%
+    group_by(school_code, team_code, scale, score_name) %>%
+    summarize(team_mean = mean(score_value, na.rm = TRUE), .groups = "drop")
   
-  # Assemblage final
-  final_scores <- all_scores %>%
-    left_join(scale_labels, by = c("scale", "score_type")) %>%
-    left_join(categories, by = c("scale", "score_type")) %>%
+  # Joindre les moyennes au data frame initial
+  all_scores <- all_scores %>%
+    left_join(school_means, by = c("school_code", "scale", "score_name")) %>%
+    left_join(team_means, by = c("school_code", "team_code", "scale", "score_name"))
+  
+  return(all_scores)
+}
+
+# Fonction principale pour orchestrer le processus
+
+process_data <- function(data_raw, config) {
+
+  data_prepared <- prepare_data(data_raw, config)
+  all_scores <- compile_all_scores(data_prepared, config)
+  
+  # Joindre les informations supplémentaires (school_code, team_code)
+  all_scores <- all_scores %>%
+    left_join(data_prepared %>% select(person_id, school_code, team_code), by = "person_id")
+  
+  # Calculer les moyennes par groupe
+  all_scores <- calculate_group_means(all_scores)
+  
+  # Calculer les quartiles théoriques
+  quartiles_df <- calculate_theoretical_quartiles(config)
+  
+  # Joindre les quartiles au data frame des scores
+  all_scores <- all_scores %>%
+    left_join(quartiles_df, by = "scale")
+  
+  # Déterminer la position du quartile pour chaque score et les moyennes de groupe
+  all_scores <- all_scores %>%
     mutate(
-      jdr_category = if_else(is.na(jdr_category), 
-                             "non_categorise", jdr_category)
-    ) %>%
-    arrange(timestamp, group_id, subgroup_id, 
-            person_id, scale, score_type) %>%
-    standardize_data_types() %>%
-    select(
-      timestamp, month, person_id, person_id_secure,
-      group_id, subgroup_id, scale, scale_label,
-      scale_description, scale_reference, score_type,
-      score_type_label, jdr_category, score_value,
-      subgroup_reference, subgroup_sd, subgroup_n,
-      group_reference, group_sd, group_n, quartile
+      quartile_position = case_when(
+        score_value <= Q1 ~ 1,
+        score_value <= Q2 ~ 2,
+        score_value <= Q3 ~ 3,
+        score_value <= max_value ~ 4,
+        TRUE ~ NA_real_
+      ),
+      school_quartile_position = case_when(
+        school_mean <= Q1 ~ 1,
+        school_mean <= Q2 ~ 2,
+        school_mean <= Q3 ~ 3,
+        school_mean <= max_value ~ 4,
+        TRUE ~ NA_real_
+      ),
+      team_quartile_position = case_when(
+        team_mean <= Q1 ~ 1,
+        team_mean <= Q2 ~ 2,
+        team_mean <= Q3 ~ 3,
+        team_mean <= max_value ~ 4,
+        TRUE ~ NA_real_
+      )
     )
   
-  return(final_scores)
+  # Réorganiser les colonnes pour une meilleure lisibilité
+  all_scores <- all_scores %>%
+    select(person_id, timestamp, month, school_code, team_code,
+           scale, scale_label, score_name, score_label, category,
+           score_value, quartile_position,
+           school_mean, school_quartile_position,
+           team_mean, team_quartile_position,
+           Q1, Q2, Q3, min_value, max_value,
+           everything())
+  
+  return(all_scores)
 }

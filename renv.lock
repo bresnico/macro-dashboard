@@ -186,20 +186,6 @@
       ],
       "Hash": "8fcc818f3b9887aebaf206f141437cc9"
     },
-    "bsicons": {
-      "Package": "bsicons",
-      "Version": "0.1.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "cli",
-        "htmltools",
-        "rlang",
-        "utils"
-      ],
-      "Hash": "d8f892fbd94d0b9b1f6d688b05b8633c"
-    },
     "bslib": {
       "Package": "bslib",
       "Version": "0.8.0",
@@ -888,23 +874,6 @@
       ],
       "Hash": "b8552d117e1b808b09a832f589b79035"
     },
-    "limer": {
-      "Package": "limer",
-      "Version": "0.1",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteUsername": "cloudyr",
-      "RemoteRepo": "limer",
-      "RemoteRef": "master",
-      "RemoteSha": "05a085d8abc016f353d2f596a8c6f3ed1af9445d",
-      "Requirements": [
-        "base64enc",
-        "httr",
-        "jsonlite"
-      ],
-      "Hash": "be54ebd376af0bdcd769e2f3e3d3977c"
-    },
     "lubridate": {
       "Package": "lubridate",
       "Version": "1.9.4",
@@ -1009,6 +978,26 @@
       ],
       "Hash": "ccbb8846be320b627e6aa2b4616a2ded"
     },
+    "officer": {
+      "Package": "officer",
+      "Version": "0.6.7",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R6",
+        "cli",
+        "grDevices",
+        "graphics",
+        "openssl",
+        "ragg",
+        "stats",
+        "utils",
+        "uuid",
+        "xml2",
+        "zip"
+      ],
+      "Hash": "d6c0a4e796301a5d252de42c92a9a8b9"
+    },
     "openssl": {
       "Package": "openssl",
       "Version": "2.2.2",
@@ -1045,38 +1034,6 @@
         "utils"
       ],
       "Hash": "01f28d4278f15c76cddbea05899c5d6f"
-    },
-    "plotly": {
-      "Package": "plotly",
-      "Version": "4.10.4",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "RColorBrewer",
-        "base64enc",
-        "crosstalk",
-        "data.table",
-        "digest",
-        "dplyr",
-        "ggplot2",
-        "htmltools",
-        "htmlwidgets",
-        "httr",
-        "jsonlite",
-        "lazyeval",
-        "magrittr",
-        "promises",
-        "purrr",
-        "rlang",
-        "scales",
-        "tibble",
-        "tidyr",
-        "tools",
-        "vctrs",
-        "viridisLite"
-      ],
-      "Hash": "a1ac5c03ad5ad12b9d1597e00e23c3dd"
     },
     "prettyunits": {
       "Package": "prettyunits",
@@ -1733,6 +1690,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "51dab85c6c98e50a18d7551e9d49f76c"
+    },
+    "zip": {
+      "Package": "zip",
+      "Version": "2.3.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "fcc4bd8e6da2d2011eb64a5e5cc685ab"
     }
   }
 }
