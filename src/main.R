@@ -1,54 +1,21 @@
+source("src/lib/dependencies.R")
+load_dependencies()
+
 source("src/lib/connection.R")
 source("src/lib/import.R")
 source("src/lib/scales.R")
 source("src/lib/demographics.R")
-
-library(glue)
+source("src/lib/utils.R")
+source("src/lib/groups.R")
 
 # Chargement config
 config <- yaml::read_yaml("src/config/scales.yml")
 credentials <- yaml::read_yaml("src/config/credentials.yml")
 survey_id <- credentials$limesurvey$survey_id
-
-# Préparation du log
-log_info <- function(msg) {
-  log_dir <- "logs"
-  if (!dir.exists(log_dir)) {
-    dir.create(log_dir, recursive = TRUE)
-  }
-  cat(glue("[{Sys.time()}] {msg}\n\n"), 
-      file = file.path(log_dir, "process.log"), 
-      append = TRUE)
-}
-
-# Fonction pour envoyer des messages Telegram
-send_telegram_notification <- function(message, bot_token, chat_id) {
-  if (!startsWith(as.character(chat_id), "-100")) {
-    chat_id <- paste0("-100", gsub("-", "", chat_id))
-  }
-  
-  url <- paste0("https://api.telegram.org/bot", bot_token, "/sendMessage")
-  
-  body <- list(
-    chat_id = chat_id,
-    text = message,
-    parse_mode = "HTML"
-  )
-  
-  tryCatch({
-    response <- httr::POST(
-      url = url,
-      body = body,
-      encode = "json"
-    )
-    return(httr::status_code(response) == 200)
-  }, error = function(e) {
-    return(FALSE)
-  })
-}
+groups_config <- yaml::read_yaml("src/config/groups.yml")
 
 # Pipeline principal
-main <- function(survey_id, credentials) {
+main <- function(survey_id, credentials, groups_config) {
   start_time <- Sys.time()
   status <- "✅ Succès"
   error_msg <- NULL
@@ -78,7 +45,7 @@ main <- function(survey_id, credentials) {
     
     # 3. Traitement des échelles et des données démographiques en parallèle
     log_info("\nCalcul des scores")
-    scales_data <- prepare_all_scales_scores(std_data, config)
+    scales_data <- process_data(std_data, config)
     n_rows <- nrow(scales_data)
     # Nombre d'échelles prises en compte
     n_scales <- scales_data |> 
@@ -86,11 +53,11 @@ main <- function(survey_id, credentials) {
       nrow()
     # Nombre de scores différents calculés, basé sur scale_label et score_type_label
     n_scores <- scales_data |> 
-      distinct(scale_label, score_type_label) |> 
+      distinct(scale_label, score_name) |> 
       nrow()
     # Nombre de passations basées sur person_id_secure et timestamp
     n_administration <- scales_data |> 
-      distinct(person_id_secure, timestamp) |> 
+      distinct(person_id, timestamp) |> 
       nrow()
     log_info(glue("\nCalcul terminé: {n_rows} lignes"))
     log_info("\nPréparation des données démographiques")
@@ -103,12 +70,28 @@ main <- function(survey_id, credentials) {
       left_join(
         demographics_data,
         by = c(
-          "person_id_secure",
+          "person_id",
           "timestamp", 
           "month",
-          "group_id"
+          "school_code",
+          "team_code"
         )
       )
+    log_info("\nJointure terminée")
+    
+    # 5. Ajout des labels de groupe
+    log_info("\nAjout des labels de groupe")
+    labels_data <- get_group_labels(groups_config)
+    processed_data <- processed_data %>%
+      left_join(
+        labels_data$school_labels,
+        by = "school_code"
+      ) %>%
+      left_join(
+        labels_data$team_labels,
+        by = c("school_code", "team_code")
+      )
+    
     log_info("\nJointure terminée")
     
     # Ajout de la colonne reseacher id pour chaque observation avec credentials$researcher_codes[1]
@@ -162,4 +145,4 @@ Passations: {n_administration}
 }
 
 # Exécution
-main(survey_id, credentials)
+main(survey_id, credentials, groups_config)

@@ -2,19 +2,18 @@
 
 ## Vue d'ensemble
 
-Cette plateforme est un outil de monitorage en temps réel du développement professionnel des enseignant·es, basé sur des échelles d'évaluation scientifiquement validées. Le système utilise Quarto et Shiny pour créer un dashboard interactif permettant différentes vues selon le profil utilisateur.
+Cette plateforme est un outil de monitorage en temps réel du développement professionnel des enseignant·es, basé sur des échelles d'évaluation scientifiquement validées. Le système utilise Quarto pour créer un rapport de résultats pour l'enseignant·e et un rapport de résultats pour la direction permettant différentes analyses selon les besoins.
 
 ### Objectifs principaux
-- Permettre aux enseignant·es de suivre leur développement professionnel
-- Fournir aux directions un tableau de bord pour le pilotage d'établissement
-- Offrir aux équipes de recherche un accès aux données pour des analyses approfondies
+- Générer des rapports détaillés sur le développement professionnel
+- Informer pour soutenir la prise de décision
 
 ### Architecture technique
 
 Le système s'articule autour de trois composants :
 1. Une API LimeSurvey pour la collecte des données
 2. Un pipeline R pour le traitement et l'analyse
-3. Un dashboard Quarto avec des composants Shiny pour la visualisation
+3. Un système de reporting Quarto pour communiquer les résultats
 
 L'architecture est basée sur des fichiers de configuration YAML qui définissent :
 - Les credentials d'accès (credentials.yml)
@@ -32,15 +31,11 @@ L'architecture est basée sur des fichiers de configuration YAML qui définissen
 ```r
 install.packages(c(
   "tidyverse",  # Traitement des données
-  "shiny",      # Composants interactifs
-  "bslib",      # Theming Bootstrap
-  "bsicons",    # Icônes Bootstrap
-  "plotly",     # Graphiques interactifs
-  "DT",         # Tables interactives
   "yaml",       # Lecture des configurations
-  "limer"       # API LimeSurvey
-  "glue"        # Traitement des données
-  "httr"        # Requêtes HTTP (notifications Telegram)
+  "limer",      # API LimeSurvey
+  "glue",       # Traitement des données
+  "httr",       # Requêtes HTTP (notifications Telegram)
+  [packages supplémentaires à ajouter]
 ))
 ```
 
@@ -48,24 +43,25 @@ install.packages(c(
 
 ```
 .
-├── dashboard_files/         # Fichiers générés par Quarto
+├── archive/                    # Version précédente du dashboard
+├── tools/                      # Scripts utilitaires
+├── outputs/                    # Fichiers générés
 ├── src/
 │   ├── config/          
-│   │   ├── credentials.yml  # Configuration API, Telegram et accès chercheurs (non versionné)
-│   │   └── scales.yml       # Définition des échelles
-│   ├── lib/            
-│   │   ├── connection.R     # Connexion LimeSurvey
-│   │   ├── import.R         # Import des données
-│   │   ├── scales.R         # Traitement des échelles
-│   │   └── demographics.R   # Traitement des données démographiques
-│   ├── main.R               # Pipeline principal avec notification Telegram
-│   └── render_notify.R      # Génération Quarto avec notification Telegram
+│   │   ├── credentials.yml    # Configuration API (non versionné)
+│   │   └── scales.yml         # Définition des échelles
+│   └── lib/            
 ├── data/
-│   └── processed/           # Données traitées (format CSV)
-├── logs/                    # Logs système
-├── dashboard.qmd            # Dashboard Quarto principal
+│   └── processed/             # Données traitées (format CSV)
+├── logs/                      # Logs système
+├── reporting.qmd              # Fichier Quarto principal
 └── README.md
 ```
+
+## Échelles d'évaluation
+
+- 23 échelles validée scientifiquement
+- 65 scores générés
 
 ## Configuration
 
@@ -92,31 +88,6 @@ researcher_codes:
   - 'CODE1'
   - 'CODE2'
 ```
-
-### Échelles d'évaluation
-
-Le système gère actuellement 5 échelles standardisées :
-
-1. **TSES (Teacher Self-Efficacy Scale)**
-   - Score total et 3 sous-échelles
-   - Échelle Likert 9 points
-
-2. **TES (Teacher Emotion Scale)**
-   - 3 sous-échelles : joie, colère, anxiété
-   - Échelle Likert 4 points
-
-3. **SMBM (Shirom-Melamed Burnout Measure)**
-   - Score total et 3 sous-échelles
-   - Échelle Likert 7 points
-
-4. **CPS (Compétences Psychosociales)**
-   - Score total et 4 sous-échelles
-   - Échelle Likert 7 points
-
-5. **TWBI (Teacher Wellbeing Index)**
-   - Score total et 5 sous-échelles
-   - Échelle Likert 6 points
-
 ## Pipeline de traitement
 
 ### Flux principal
@@ -230,52 +201,9 @@ Le statut de ces opérations peut être suivi via :
 - Les notifications Telegram
 - L'interface du dashboard
 
-## Dashboard Quarto
+## Génération de rapports
 
-### Lancement
-
-```bash
-quarto render dashboard.qmd
-```
-
-### Profils utilisateurs
-
-#### Espace profs
-- Visualisation des scores personnels
-- Comparaison avec moyennes de groupe
-- Sélection des échelles et sous-scores
-
-#### Espace direction
-- Vue d'ensemble de l'établissement
-- Statistiques agrégées par groupe
-- Évolution temporelle des scores
-
-#### Espace recherche
-- En développement
-- Accès prévu aux données anonymisées
-- Filtres démographiques
-
-### Paramètres de visualisation
-
-Chaque vue propose :
-- Sélection des échelles
-- Choix des sous-scores
-- Affichage graphique ou tabulaire
-- Périodes temporelles
-
-## Développement
-
-### Bonnes pratiques
-- Documenter les modifications d'échelles dans scales.yml
-- Tester avec un jeu de données réduit
-- Ne pas versionner credentials.yml
-- Loguer les erreurs dans /logs
-
-### Extensions futures
-- Ajout de nouvelles échelles
-- Analyses démographiques 
-- Export de rapports PDF
-- Tableaux de bord personnalisés
+[à venir]
 
 ## Support
 

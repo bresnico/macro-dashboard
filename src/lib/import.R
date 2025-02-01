@@ -37,6 +37,12 @@ standardize_limesurvey_names <- function(data, config) {
         groupecode == "" ~ "divers",
         is.null(groupecode) ~ "divers",
         TRUE ~ groupecode
+      ),
+      grouperef = case_when(
+        is.na(grouperef) ~ "none",
+        grouperef == "" ~ "none",
+        is.null(grouperef) ~ "none",
+        TRUE ~ grouperef
       )
     )
   

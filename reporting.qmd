@@ -1,0 +1,385 @@
+---
+title: "Bilan de passation JDR"
+format: 
+  html:
+    toc: true
+    theme: default
+    df-print: paged
+server: shiny
+---
+
+```{r}
+#| context: setup
+
+# Chargement des packages
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(DT)
+  library(shiny)
+})
+
+# Chargement des données
+get_survey_data <- function() {
+  tryCatch({
+    files <- list.files(
+      "data/processed",
+      pattern = "^survey_data_.*\\.csv$",
+      full.names = TRUE
+    )
+    if(length(files) == 0) {
+      stop("No data files found")
+    }
+    
+    latest_index <- which.max(file.info(files)$mtime)
+    latest_file <- files[latest_index]
+    latest_date <- format(file.info(files)$mtime[latest_index],
+                         format = "%H:%M",
+                         tz = "Europe/Paris")
+    
+    list(
+      data = read_csv(latest_file, 
+                     locale = locale(encoding = "UTF-8"),
+                     show_col_types = FALSE),
+      update_time = latest_date
+    )
+  }, error = function(e) {
+    warning(paste("Error loading data:", e$message))
+    return(list(data = NULL, update_time = NULL))
+  })
+}
+
+# Usage
+survey_data <- get_survey_data()
+data <- survey_data$data
+update_time <- survey_data$update_time
+
+# Fonction de calcul du score standardisé
+
+calculate_standard_score <- function(score_value, min_value, max_value) {
+  ((score_value - min_value) / (max_value - min_value)) * 100
+}
+
+# Fonction utilitaire pour créer les datatables
+
+create_jdr_datatable <- function(data, categories, detailed = FALSE) {
+  # Sélection initiale différente selon le mode
+  if (detailed) {
+    data_filtered <- data %>%
+      filter(category %in% categories) %>%
+      mutate(
+        score_standard = calculate_standard_score(score_value, min_value, max_value)
+        ) %>%
+        group_by(scale_label) %>%
+        arrange(desc(score_standard), .by_group = TRUE) %>%
+        ungroup() %>%
+      select(
+        Échelle = scale_label,
+        Dimension = score_label,
+        `Score personnel` = score_value,
+        `Score standardisé` = score_standard,
+        `Moyenne équipe` = team_mean,
+        `Moyenne établissement` = school_mean,
+        quartile_position,
+        team_quartile_position,
+        school_quartile_position
+      )
+  } else {
+    data_filtered <- data %>%
+      filter(category %in% categories) %>%
+      mutate(
+        score_standard = calculate_standard_score(score_value, min_value, max_value)
+        ) %>%
+        group_by(scale_label) %>%
+        arrange(desc(score_standard), .by_group = TRUE) %>%
+        ungroup() %>%      
+      select(
+        Échelle = scale_label,
+        Dimension = score_label,
+        `Score personnel` = score_value,
+        `Score standardisé` = score_standard,
+        `Moyenne équipe` = team_mean,
+        `Moyenne établissement` = school_mean,
+        quartile_position
+      )
+  }
+  
+  # Ajouter les ronds de couleur pour les quartiles
+  data_filtered <- data_filtered %>%
+    mutate(
+      Quartile = case_when(
+        quartile_position == 1 ~ "🔴",
+        quartile_position == 2 ~ "🟠",
+        quartile_position == 3 ~ "🟡",
+        quartile_position == 4 ~ "🟢",
+        TRUE ~ "⚪"
+      )
+    )
+  
+  if (detailed) {
+    # Ajouter les quartiles équipe et établissement
+    data_filtered <- data_filtered %>%
+      mutate(
+        `Quartile équipe` = case_when(
+          team_quartile_position == 1 ~ "🔴",
+          team_quartile_position == 2 ~ "🟠",
+          team_quartile_position == 3 ~ "🟡",
+          team_quartile_position == 4 ~ "🟢",
+          TRUE ~ "⚪"
+        ),
+        `Quartile établissement` = case_when(
+          school_quartile_position == 1 ~ "🔴",
+          school_quartile_position == 2 ~ "🟠",
+          school_quartile_position == 3 ~ "🟡",
+          school_quartile_position == 4 ~ "🟢",
+          TRUE ~ "⚪"
+        )
+      ) %>%
+      # Supprimer les colonnes temporaires
+      select(-team_quartile_position, -school_quartile_position)
+  }
+  
+  # Réorganisation finale des colonnes
+  data_filtered <- data_filtered %>%
+    select(Quartile, Échelle, Dimension, everything(), -quartile_position)
+  
+  # Création de la table avec regroupement
+  dt <- datatable(
+    data_filtered,
+    rownames = FALSE,
+    extensions = c("RowGroup", "Buttons"),
+    options = list(
+      pageLength = 20,
+      dom = 'Bfrtip',
+      ordering = FALSE,
+      rowGroup = list(
+        dataSrc = 1  # Index de la colonne 'Échelle' (0-based)
+      ),
+      columnDefs = list(
+        list(visible = FALSE, targets = 1)  # Cache la colonne 'Échelle'
+      ),
+      buttons = list( # Configuration des boutons d'export
+        'copy',
+        'csv',
+        'pdf',
+        'colvis' # Bouton pour masquer/afficher les colonnes
+      )
+    )
+  ) %>%
+    formatRound(
+      columns = c('Score personnel', 'Score standardisé', 'Moyenne équipe', 'Moyenne établissement'), 
+      digits = 2
+    )
+  
+  return(dt)
+}
+
+```
+
+## Mise à jour des données {.unnumbered}
+
+```{r}
+
+uiOutput("update_time_ui")
+```
+
+## Identification
+
+```{r}
+textInput("person_id_input", "Entrez votre identifiant :", value = "", placeholder = "01NS14-artichaut")
+
+uiOutput("person_id_status")
+
+```
+
+## Données démographiques
+
+```{r}
+DTOutput("demo_table")
+```
+
+## Résultats
+
+### Contraintes individuelles et organisationnelles
+
+:::: {.panel-tabset}
+
+##### Vue simple
+
+```{r}
+DTOutput("constraints_table_simple")
+```
+
+##### Vue détaillée
+
+```{r}
+DTOutput("constraints_table_detailed")
+```
+
+::::
+
+### Ressources individuelles et organisationnelles
+
+:::: {.panel-tabset}
+
+##### Vue simple
+
+```{r}
+DTOutput("resources_table_simple")
+```
+
+##### Vue détaillée
+
+```{r}
+DTOutput("resources_table_detailed")
+```
+
+::::
+
+### Qualité de vie au travail
+
+:::: {.panel-tabset}
+
+##### Vue simple
+
+```{r}
+DTOutput("qvt_table_simple")
+```
+
+##### Vue détaillée
+
+```{r}
+DTOutput("qvt_table_detailed")
+```
+
+::::
+
+### Épanouissement et fonctionnement optimal
+
+:::: {.panel-tabset}
+
+##### Vue simple
+
+```{r}
+DTOutput("epfo_table_simple")
+```
+
+##### Vue détaillée
+
+```{r}
+DTOutput("epfo_table_detailed")
+```
+
+::::
+
+```{r}
+#| context: server
+
+# Affichage de l'heure de mise à jour des données
+
+output$update_time_ui <- renderUI({
+  div(
+    style = "color: #666; font-size: 0.9em; margin: -10px 0 20px 0;",
+    icon("clock"), 
+    paste("Dernière mise à jour des données :", update_time)
+  )
+})
+
+# Validation de l'ID
+output$person_id_status <- renderUI({
+  req(input$person_id_input)
+  valid_person_id <- any(data$person_id == input$person_id_input, na.rm = TRUE)
+  
+  if(valid_person_id) {
+    tagList(
+      div(style = "color: green;", icon("check-circle"), "Identifiant valide"),
+    )
+  } else {
+    div(style = "color: red;", icon("exclamation-circle"), 
+        "Identifiant non reconnu")
+  }
+})
+
+# Définition des catégories
+categories <- list(
+  "constraints" = c("CI", "CO"),
+  "resources" = c("RI", "RO"),
+  "qvt" = c("EMO", "TROUBLES", "MOT"),
+  "epfo" = c("EFF", "BIENETRE", "SAT", "PER", "ATT")
+)
+
+# Données filtrées selon l'ID
+filtered_data <- reactive({
+  req(input$person_id_input)
+  validate(need(nchar(input$person_id_input) > 0, ""))
+  
+  user_data <- data %>%
+    filter(person_id == input$person_id_input)
+  
+  validate(need(nrow(user_data) > 0, "Veuillez entrer un identifiant valide."))
+  
+  user_data
+})
+
+# Table démographique
+output$demo_table <- renderDT({
+  req(filtered_data())
+  
+  filtered_data() %>%
+    select(person_id, age, gender, status, experience, school_label, team_label) %>%
+    distinct() %>%
+    rename(
+      `Identifiant` = person_id,
+      Âge = age,
+      Genre = gender,
+      Statut = status,
+      Expérience = experience,
+      `Établissement` = school_label,
+      `Équipe` = team_label
+    ) %>%
+    datatable(options = list(dom = 't'), rownames = FALSE)
+})
+
+# Outputs pour les contraintes
+output$constraints_table_simple <- renderDT({
+  req(filtered_data())
+  create_jdr_datatable(filtered_data(), categories$constraints, detailed = FALSE)
+})
+
+output$constraints_table_detailed <- renderDT({
+  req(filtered_data())
+  create_jdr_datatable(filtered_data(), categories$constraints, detailed = TRUE)
+})
+
+# Outputs pour les ressources
+output$resources_table_simple <- renderDT({
+  req(filtered_data())
+  create_jdr_datatable(filtered_data(), categories$resources, detailed = FALSE)
+})
+
+output$resources_table_detailed <- renderDT({
+  req(filtered_data())
+  create_jdr_datatable(filtered_data(), categories$resources, detailed = TRUE)
+})
+
+# Outputs pour la qualité de vie au travail
+output$qvt_table_simple <- renderDT({
+  req(filtered_data())
+  create_jdr_datatable(filtered_data(), categories$qvt, detailed = FALSE)
+})
+
+output$qvt_table_detailed <- renderDT({
+  req(filtered_data())
+  create_jdr_datatable(filtered_data(), categories$qvt, detailed = TRUE)
+})
+
+# Outputs pour l'épanouissement
+output$epfo_table_simple <- renderDT({
+  req(filtered_data())
+  create_jdr_datatable(filtered_data(), categories$epfo, detailed = FALSE)
+})
+
+output$epfo_table_detailed <- renderDT({
+  req(filtered_data())
+  create_jdr_datatable(filtered_data(), categories$epfo, detailed = TRUE)
+})
+```
