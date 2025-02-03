@@ -182,6 +182,48 @@ create_jdr_datatable <- function(data, categories, detailed = FALSE) {
 uiOutput("update_time_ui")
 ```
 
+## To do list [work in progress]
+
+- vérifier que tous les scores sont tournés dans le même sens càd que plus le score est haut, meilleur il est pour la personne (donc le score de colère est mauvais quand il dit 1 sur 6 et bon quand il a 5 sur 6) --> les feux sont toujours valables.
+
+    - formuler un "guide de lecture" du rapport
+    - documenter ce choix stratégique qui influence scales.yml. (readme de github)
+    - vérifier chaque échelles dans le docx pour s'assurer que les scores sont bien dans le bon sens attendu
+
+- changer le lien à competences-emotionnelles.ch et choisir un autre domaine
+- scores nommés
+
+    - enlever "score global" et inscrire comme "sous-score" dans le yaml
+    - gérer / fusionner qaes 1 et 2.
+   
+- ajouter feux rouge, orange foncé, orange clair, vert
+
+    - Equipe :
+    
+        - pas de calcul des scores si <10 
+        - pas de calcul des scores si équipe est non renseigné
+    
+    - Etablissement :
+    
+        - pas de calcul des scores si <10 
+        - pas de calcul des scores si établissement est non renseigné
+    
+- Sortir TIPI du rapport
+- rapport prof
+    
+    - décider contenu de "vue simple" "vue détaillée"
+
+- DT
+   
+   - traduire les boutons (list = ...)
+
+- rapport CD (DIR)
+
+    - Général pour l'établissement 
+    - Equipe par équipe (avec filtre)
+    - Selon filtres démo
+    - vérifier si on fait un "nouveau" shiny ou bien si on ajoute un onglet "direction" à l'existant
+
 ## Identification
 
 ```{r}

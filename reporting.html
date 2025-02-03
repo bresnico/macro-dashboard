@@ -46,6 +46,7 @@ ul.task-list li input[type="checkbox"] {
    
   <ul>
   <li><a href="#mise-à-jour-des-données" id="toc-mise-à-jour-des-données" class="nav-link active" data-scroll-target="#mise-à-jour-des-données">Mise à jour des données</a></li>
+  <li><a href="#to-do-list-work-in-progress" id="toc-to-do-list-work-in-progress" class="nav-link" data-scroll-target="#to-do-list-work-in-progress">To do list [work in progress]</a></li>
   <li><a href="#identification" id="toc-identification" class="nav-link" data-scroll-target="#identification">Identification</a></li>
   <li><a href="#données-démographiques" id="toc-données-démographiques" class="nav-link" data-scroll-target="#données-démographiques">Données démographiques</a></li>
   <li><a href="#résultats" id="toc-résultats" class="nav-link" data-scroll-target="#résultats">Résultats</a>
@@ -86,6 +87,52 @@ ul.task-list li input[type="checkbox"] {
 <div id="update_time_ui" class="shiny-html-output"></div>
 </div>
 </div>
+</section>
+<section id="to-do-list-work-in-progress" class="level2">
+<h2 class="anchored" data-anchor-id="to-do-list-work-in-progress">To do list [work in progress]</h2>
+<ul>
+<li><p>vérifier que tous les scores sont tournés dans le même sens càd que plus le score est haut, meilleur il est pour la personne (donc le score de colère est mauvais quand il dit 1 sur 6 et bon quand il a 5 sur 6) –&gt; les feux sont toujours valables.</p>
+<ul>
+<li>formuler un “guide de lecture” du rapport</li>
+<li>documenter ce choix stratégique qui influence scales.yml. (readme de github)</li>
+<li>vérifier chaque échelles dans le docx pour s’assurer que les scores sont bien dans le bon sens attendu</li>
+</ul></li>
+<li><p>changer le lien à competences-emotionnelles.ch et choisir un autre domaine</p></li>
+<li><p>scores nommés</p>
+<ul>
+<li>enlever “score global” et inscrire comme “sous-score” dans le yaml</li>
+<li>gérer / fusionner qaes 1 et 2.</li>
+</ul></li>
+<li><p>ajouter feux rouge, orange foncé, orange clair, vert</p>
+<ul>
+<li><p>Equipe :</p>
+<ul>
+<li>pas de calcul des scores si &lt;10</li>
+<li>pas de calcul des scores si équipe est non renseigné</li>
+</ul></li>
+<li><p>Etablissement :</p>
+<ul>
+<li>pas de calcul des scores si &lt;10</li>
+<li>pas de calcul des scores si établissement est non renseigné</li>
+</ul></li>
+</ul></li>
+<li><p>Sortir TIPI du rapport</p></li>
+<li><p>rapport prof</p>
+<ul>
+<li>décider contenu de “vue simple” “vue détaillée”</li>
+</ul></li>
+<li><p>DT</p>
+<ul>
+<li>traduire les boutons (list = …)</li>
+</ul></li>
+<li><p>rapport CD (DIR)</p>
+<ul>
+<li>Général pour l’établissement</li>
+<li>Equipe par équipe (avec filtre)</li>
+<li>Selon filtres démo</li>
+<li>vérifier si on fait un “nouveau” shiny ou bien si on ajoute un onglet “direction” à l’existant</li>
+</ul></li>
+</ul>
 </section>
 <section id="identification" class="level2">
 <h2 class="anchored" data-anchor-id="identification">Identification</h2>
