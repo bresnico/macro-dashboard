@@ -384,6 +384,11 @@ create_jdr_datatable <- function(data, categories, detailed = FALSE) {
     rownames = FALSE,
     extensions = c("RowGroup", "Buttons"),
     options = list(
+      language = list(
+        info = 'Yeah, il y a _TOTAL_ scores de _START_ à _END_',
+        paginate = list(previous = 'Avant', `next` = 'Après'),
+        search = "Rechercher"
+        ),
       pageLength = 20,
       dom = 'Bfrtip',
       ordering = FALSE,
@@ -394,10 +399,18 @@ create_jdr_datatable <- function(data, categories, detailed = FALSE) {
         list(visible = FALSE, targets = 1)  # Cache la colonne 'Échelle'
       ),
       buttons = list( # Configuration des boutons d'export
-        'copy',
+        list(
+          extend = "copy",
+          text = "Copier",
+          titleAttr = "Copier dans le presse-papier"
+        ),
         'csv',
         'pdf',
-        'colvis' # Bouton pour masquer/afficher les colonnes
+        list(
+          extend ='colvis',
+          text = "Visibilité",
+          titleAttr = "Visibilité des colonnes"
+        )
       )
     )
   ) %>%
